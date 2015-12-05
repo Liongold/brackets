@@ -747,6 +747,8 @@ define(function (require, exports, module) {
      * @param {!Array.<File>} fileList - Array of files to add to the pane
      */
     function addListToWorkingSet(paneId, fileList) {
+        console.log(paneId);
+        console.log(fileList);
         var uniqueFileList,
             pane = _getPane(paneId);
 
@@ -758,7 +760,8 @@ define(function (require, exports, module) {
             }
             _mruList.push(_makeMRUListEntry(file, pane.id));
         });
-        
+        console.log(uniqueFileList);
+        console.log(pane.id);
         exports.trigger("workingSetAddList", uniqueFileList, pane.id);
         
         //  find all of the files that could be added but were not 

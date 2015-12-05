@@ -401,9 +401,14 @@ define(function (require, exports, module) {
      * @return {string} HTML formatted string
      */
     function getFileEntryDisplay(entry) {
-        var name = entry.name,
+        console.log(entry);
+        console.log(entry.name);
+        var name = entry,//.name,
             ext = FileUtils.getSmartFileExtension(name),
             i = name.lastIndexOf("." + ext);
+        
+        //Adjust file paramter to include only filename 
+        name = FileUtils.getBaseName(name);
         
         if (i > 0) {
             // Escape all HTML-sensitive characters in filename.

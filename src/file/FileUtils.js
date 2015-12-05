@@ -283,6 +283,7 @@ define(function (require, exports, module) {
      * directory
      */
     function getBaseName(fullPath) {
+        console.log(fullPath);
         var lastSlash = fullPath.lastIndexOf("/");
         if (lastSlash === fullPath.length - 1) {  // directory: exclude trailing "/" too
             return fullPath.slice(fullPath.lastIndexOf("/", fullPath.length - 2) + 1, -1);
@@ -357,6 +358,7 @@ define(function (require, exports, module) {
      * the argument is a directory or a filename with no extension
      */
     function getSmartFileExtension(fullPath) {
+        console.log(fullPath);
         var baseName = getBaseName(fullPath),
             parts = baseName.split(".");
 

@@ -73,6 +73,8 @@ define(function (require, exports, module) {
      * @param {FileSystemEntry} entry The entry to add.
      */
     FileIndex.prototype.addEntry = function (entry) {
+        console.log(entry);
+        console.log("addentry");
         this._index[entry.fullPath] = entry;
     };
     
@@ -153,6 +155,8 @@ define(function (require, exports, module) {
      *              been cached yet.
      */
     FileIndex.prototype.getEntry = function (path) {
+        console.log("getEntry");
+        console.log(this._index);
         return this._index[path];
     };
     

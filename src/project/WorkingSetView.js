@@ -1129,6 +1129,7 @@ define(function (require, exports, module) {
                     isFile: file.isFile};
 
         // Create new list item with a link
+        console.log(file);
         var $link = $("<a href='#'></a>").html(ViewUtils.getFileEntryDisplay(file));
            
         _iconProviders.forEach(function (provider) {
@@ -1174,6 +1175,7 @@ define(function (require, exports, module) {
         this.$openFilesContainer.find("ul").empty();
         
         fileList.forEach(function (file) {
+            console.log(file);
             self._createNewListItem(file);
         });
 
@@ -1240,6 +1242,9 @@ define(function (require, exports, module) {
      * @param {!string} paneId - the id of the pane the item that was to
      */
     WorkingSetView.prototype._handleFileListAdded = function (e, files, paneId) {
+        console.log(e);
+        console.log(files);
+        console.log(paneId);
         if (paneId === this.paneId) {
             this._rebuildViewList(true);
         } else {

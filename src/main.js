@@ -35,7 +35,8 @@ require.config({
 
         // The file system implementation. Change this value to use different
         // implementations (e.g. cloud-based storage).
-        "fileSystemImpl"    : "filesystem/impls/demo/DemoFileSystem"
+        //"fileSystemImpl"    : "filesystem/impls/demo/DemoFileSystem"
+        "fileSystemImpl"    : "filesystem/impls/demo/CloudFileSystem"
     }
 });
 
@@ -59,6 +60,10 @@ if (window.location.search.indexOf("testEnvironment") > -1) {
         locale: window.localStorage.getItem("locale") || (typeof (brackets) !== "undefined" ? brackets.app.language : navigator.language)
     });
 }
+/* Extend RequireJS timeout */
+require.config({
+    waitSeconds: 60
+});
 
 define(function (require) {
     "use strict";

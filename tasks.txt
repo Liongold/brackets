@@ -1,0 +1,80 @@
+-----------
+CLOSED
+-----------
+Open > chosen file saved correctly but no callback. 
+	Fix: Replace callback(latestChosen) with callback(0, [latestChosen]);
+	Bug: Killing page
+		Fix: In DocumentCommandHandler line 355:
+			                        if(paths.length == 1) {
+                            				console.log(1);
+                            				filesToOpen = paths;
+                       			 }else{
+					console.log(2);
+                        				paths.forEach(function (path) {
+                           					 filesToOpen.push(FileSystem.getFileForPath(path));
+                        				});
+                        			}
+------------
+CLOSED
+------------
+File > Open...
+Bug: Exception in 'workingSetAddList' listener on Object {_EventDispatcher: true, ALL_PANES: "ALL_PANES", ACTIVE_PANE: "ACTIVE_PANE", _eventHandlers: Object} TypeError: Cannot read property 'lastIndexOf' of undefined TypeError: Cannot read property 'lastIndexOf' of undefined
+    at getBaseName (/file/FileUtils.js:286:33)
+    at Object.getSmartFileExtension (/file/FileUtils.js:360:24)
+    at Object.getFileEntryDisplay (/utils/ViewUtils.js:405:29)
+    at WorkingSetView._createNewListItem (/project/WorkingSetView.js:1132:58)
+    at eval (/project/WorkingSetView.js:1177:18)
+    at Array.forEach (native)
+    at WorkingSetView._rebuildViewList (/project/WorkingSetView.js:1176:18)
+    at WorkingSetView._handleFileListAdded (/project/WorkingSetView.js:1244:18)
+    at t (/thirdparty/lodash.js:11:218)
+    at Object.trigger (/utils/EventDispatcher.js:222:40)
+	m
+
+    Fixed
+        Exception in 'workingSetAddList' listener on Object {_EventDispatcher: true, ALL_PANES: "ALL_PANES", ACTIVE_PANE: "ACTIVE_PANE", _eventHandlers: Object} ReferenceError: ext is not defined ReferenceError: ext is not defined
+            at Object.getFileEntryDisplay (/utils/ViewUtils.js:407:17)
+            at WorkingSetView._createNewListItem (/project/WorkingSetView.js:1133:58)
+            at eval (/project/WorkingSetView.js:1179:18)
+            at Array.forEach (native)
+            at WorkingSetView._rebuildViewList (/project/WorkingSetView.js:1177:18)
+            at WorkingSetView._handleFileListAdded (/project/WorkingSetView.js:1249:18)
+            at t (/thirdparty/lodash.js:11:218)
+            at Object.trigger (/utils/EventDispatcher.js:222:40)
+            at Object.addListToWorkingSet (/view/MainViewManager.js:765:17)
+            at eval (/document/DocumentCommandHandlers.js:365:41)
+                Fixed by replace ; with ,
+                    Open works fine but has two problems:
+                        Opens two rows in sidebar
+                        Full Path is shown as name in one of them 
+                            Fixed this by adding call to FileUtils.getBaseName
+                                Fixed both by implementing watchers
+
+------------
+CLOSED
+------------
+Open Folder - chosen directory saved but no opening of folders
+	Fixed
+		Error watching project root:  / A parent of this root is already watched
+		    Fixed by implementing watchers
+--------------
+CLOSED
+--------------
+Save As - Uncaught TypeError: Cannot read property 'fullPath' of null
+    Fixed
+        Various other problems
+            Fixed
+--------------
+@brackets on Twitter: Uncaught Error: Brackets-shell is not a secure general purpose web browser. Use NativeApp.openURLInDefaultBrowser() to open URLs in the user's main browser
+---
+[Extension] failed to load /Brackets/dist/extensions/default/LightTheme - Module does not exist: http://ulkk6b05c55d.liongold.koding.io/Brackets/dist/extensions/default/LightTheme/main.js
+---
+[Extension] failed to load /Brackets/dist/extensions/default/DarkTheme - Module does not exist: http://ulkk6b05c55d.liongold.koding.io/Brackets/dist/extensions/default/DarkTheme/main.js
+--------------
+CLOSED
+--------------
+After saving, Uncaught TypeError: Cannot read property 'length' of undefined
+    Fixed
+        Various other problems
+            Fixed 
+--------------
