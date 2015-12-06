@@ -107,13 +107,13 @@ define(function (require, exports, module) {
      * @return {function(?string)} A callback that expects a FileSystemError string
      * @private
      */
-    function _wrap(cb) {
+    /*function _wrap(cb) {
         return function (err) {
             var args = Array.prototype.slice.call(arguments);
             args[0] = _mapError(args[0]);
             cb.apply(null, args);
         };
-    }
+    }*/
     
     /*function _getDemoData(fullPath) {
         var prefix = "/Getting Started/";
@@ -635,7 +635,7 @@ define(function (require, exports, module) {
                 message += "<li class=\"folder_goto\" data-folder-path=\"" + result[i].fullPath + "\" data-folder-type=\"" + type + "\">" + result[i].name + "</li>";
             }
             message += "</ul>";
-            var latestChosen = "";
+            var latestChosen = initialPath;
         //});
         
         //OLD CODE:
@@ -768,6 +768,22 @@ define(function (require, exports, module) {
         );*/
     }
 
+    
+    $(document).ready(function() {
+        setInterval(function() {
+            $("#server-connectivity-check").removeClass("connectionInactive");
+            $("#server-connectivity-check").removeClass("connectionActive");
+            $.ajax("http://ulkk6b05c55d.liongold.koding.io:7681/api/ping/")
+                .success(function() {
+                    console.log("connected successfully");
+                    $("#server-connectivity-check").addClass("connectionActive");
+                })
+                .fail(function() {
+                    console.log("connection failed");
+                    $("#server-connectivity-check").addClass("connectionInactive");
+                });
+        }, 60000);
+    });
     
     // Export public API
     exports.showOpenDialog  = showOpenDialog;

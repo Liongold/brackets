@@ -203,6 +203,7 @@ define(function (require, exports, module) {
             currentTheme = loadedThemes[prefs.get("theme")] || loadedThemes[defaultTheme];
         }
 
+        console.log("getCurrentTheme " + currentTheme);
         return currentTheme;
     }
 
@@ -212,7 +213,9 @@ define(function (require, exports, module) {
      * @return {Array.<Theme>} collection of all available themes
      */
     function getAllThemes() {
+        console.log("loadedThemes " + loadedThemes);
         return _.map(loadedThemes, function (theme) {
+            console.log("theme " + theme);
             return theme;
         });
     }
@@ -317,6 +320,7 @@ define(function (require, exports, module) {
      * @return {$.Promise} promise object resolved with the theme to be loaded from the pacakge
      */
     function loadPackage(themePackage) {
+        console.log(themePackage);
         var fileName = themePackage.path + "/" + themePackage.metadata.theme.file;
         return loadFile(fileName, themePackage.metadata);
     }

@@ -66,10 +66,17 @@ Save As - Uncaught TypeError: Cannot read property 'fullPath' of null
             Fixed
 --------------
 @brackets on Twitter: Uncaught Error: Brackets-shell is not a secure general purpose web browser. Use NativeApp.openURLInDefaultBrowser() to open URLs in the user's main browser
----
+    Fixed by removing error thrower (pending refresh)
+--------------
+CLOSED
+--------------
 [Extension] failed to load /Brackets/dist/extensions/default/LightTheme - Module does not exist: http://ulkk6b05c55d.liongold.koding.io/Brackets/dist/extensions/default/LightTheme/main.js
----
+    Fixed indrectly when fixing 'Current Theme dropdown does not show themes.'
+--------------
+CLOSED
+--------------
 [Extension] failed to load /Brackets/dist/extensions/default/DarkTheme - Module does not exist: http://ulkk6b05c55d.liongold.koding.io/Brackets/dist/extensions/default/DarkTheme/main.js
+    Fixed indrectly when fixing 'Current Theme dropdown does not show themes.'
 --------------
 CLOSED
 --------------
@@ -78,3 +85,17 @@ After saving, Uncaught TypeError: Cannot read property 'length' of undefined
         Various other problems
             Fixed 
 --------------
+After opening file, filename appears in Working Files but is not clickable. 
+--------------
+CLOSED
+--------------
+Save when project root is set does not work. 
+    Fixed (pending refresh)
+        Fixed
+--------------
+CLOSED
+--------------
+Current Theme dropdown does not show themes.
+    Fixed by adding better support for relative paths
+--------------
+No Back link in dialogs (FileSystem)

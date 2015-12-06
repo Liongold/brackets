@@ -403,8 +403,14 @@ define(function (require, exports, module) {
     function getFileEntryDisplay(entry) {
         console.log(entry);
         console.log(entry.name);
-        var name = entry,//.name,
-            ext = FileUtils.getSmartFileExtension(name),
+        //var name = entry,//.name,
+        var name;
+        if(entry.name) {
+            name = entry.name;
+        }else{
+            name = entry;
+        }
+        var    ext = FileUtils.getSmartFileExtension(name),
             i = name.lastIndexOf("." + ext);
         
         //Adjust file paramter to include only filename 

@@ -82,7 +82,8 @@ define(function (require, exports, module) {
         var themes          = _.map(loadedThemes, function (theme) { return theme; });
         var template        = $("<div>").append($settings).html();
         var $template       = $(Mustache.render(template, {"settings": currentSettings, "themes": themes, "Strings": Strings}));
-
+        console.log(themes);
+        console.log(loadedThemes);
         // Select the correct theme.
         var $currentThemeOption = $template
             .find("[value='" + currentSettings.theme + "']");

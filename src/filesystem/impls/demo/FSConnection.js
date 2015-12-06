@@ -9,6 +9,7 @@ var action, command, path, result, method, postData, parameters, requestPath, fo
 var options = {
     'encoding': 'utf-8'
 };
+var installUrl = "/Brackets/dist/";
 
 //Start up HTTP server
 http.createServer(function(request, response) {
@@ -66,6 +67,10 @@ http.createServer(function(request, response) {
             
             parsedPostData = queryString.parse(postData);
             
+        }
+        
+        if(path.substring(0, installUrl.length) === installUrl) {
+            path = "/home/liongold/Web" + path;
         }
         
         switch (command) {
@@ -250,6 +255,10 @@ http.createServer(function(request, response) {
                     console.log(reply);
                 }
                 sendResponse({});
+                break;
+                
+            case 'ping':
+                sendResponse([], { 'status': true });
                 break;
                 
             default:
