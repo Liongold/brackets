@@ -500,15 +500,14 @@ define(function (require, exports, module) {
      * @return {Directory}
      */
     function getProjectRoot() {
-        console.log(model);
         if(!model.projectRoot) {
             model.projectRoot = {
-                _path: "/liongold/",
-                fullPath: "/home/liongold/"
+                _path: "/ubuntu/workspace/",
+                fullPath: "/home/ubuntu/workspace/"
             };
         }else if(model.projectRoot._path === "/Getting Started/") {
             model.projectRoot._path = "/liongold";
-            model.projectRoot.fullPath = "/home/liongold/";
+            model.projectRoot.fullPath = "/home/ubuntu/workspace/";
         }
         return model.projectRoot;
     }
@@ -651,7 +650,7 @@ define(function (require, exports, module) {
     function _getWelcomeProjectPath() {
         if (brackets.inBrowser) {
             //return "/Getting Started/";
-            return "/home/liongold";
+            return "/home/ubuntu/workspace/";
         }
         return ProjectModel._getWelcomeProjectPath(Urls.GETTING_STARTED, FileUtils.getNativeBracketsDirectoryPath());
     }
@@ -999,7 +998,7 @@ define(function (require, exports, module) {
                     _loadProject(path, false).then(result.resolve, result.reject);
                 } else {
                     // Pop up a folder browse dialog
-                    FileSystem.showOpenDialog(false, true, Strings.CHOOSE_FOLDER, /*model.projectRoot.fullPath*/"/home/liongold/", null, function (err, files) {
+                    FileSystem.showOpenDialog(false, true, Strings.CHOOSE_FOLDER, /*model.projectRoot.fullPath*/"/home/ubuntu/workspace/", null, function (err, files) {
                         if (!err) {
                             // If length == 0, user canceled the dialog; length should never be > 1
                             if (files.length > 0) {

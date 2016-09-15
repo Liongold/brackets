@@ -241,18 +241,18 @@ module.exports = function (grunt) {
             }
         },
         /* FIXME (jasonsanjose): how to handle extension tests */
-        /*jasmine : {
+        jasmine : {
             src : 'undefined.js', /* trick the default runner to run without importing src files */
-            /*options : {
+            options : {
                 junit : {
                     path: 'test/results',
                     consolidate: true
                 },
                 specs : '<%= meta.specs %>',
                 /* Keep in sync with test/SpecRunner.html dependencies */
-                /*vendor : [
+                vendor : [
                     'test/polyfills.js', /* For reference to why this polyfill is needed see Issue #7951. The need for this should go away once the version of phantomjs gets upgraded to 2.0 */
-                /*    'src/thirdparty/jquery-2.1.3.min.js',
+                    'src/thirdparty/jquery-2.1.3.min.js',
                     'src/thirdparty/CodeMirror2/lib/codemirror.js',
                     'src/thirdparty/CodeMirror2/lib/util/dialog.js',
                     'src/thirdparty/CodeMirror2/lib/util/searchcursor.js',
@@ -282,7 +282,7 @@ module.exports = function (grunt) {
         },
         'jasmine_node': {
             projectRoot: 'src/extensibility/node/spec/'
-        },*/
+        },
         jshint: {
             all: [
                 '<%= meta.grunt %>',
@@ -319,7 +319,7 @@ module.exports = function (grunt) {
     // task: build
     grunt.registerTask('build', [
         'jshint:src',
-        'jasmine',
+        /*'jasmine',*/ 
         'clean',
         'less',
         'targethtml',
@@ -329,6 +329,19 @@ module.exports = function (grunt) {
         'concat',
         /*'cssmin',*/
         /*'uglify',*/
+        'copy',
+        'usemin',
+        'build-config'
+    ]);
+    
+    // task: fast-build
+    grunt.registerTask('fast-build', [
+        'less',
+        'targethtml',
+        'useminPrepare',
+        'htmlmin',
+        'requirejs',
+        'concat',
         'copy',
         'usemin',
         'build-config'

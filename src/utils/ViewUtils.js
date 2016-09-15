@@ -401,8 +401,6 @@ define(function (require, exports, module) {
      * @return {string} HTML formatted string
      */
     function getFileEntryDisplay(entry) {
-        console.log(entry);
-        console.log(entry.name);
         //var name = entry,//.name,
         var name;
         if(entry.name) {
@@ -410,7 +408,7 @@ define(function (require, exports, module) {
         }else{
             name = entry;
         }
-        var    ext = FileUtils.getSmartFileExtension(name),
+        var ext = FileUtils.getSmartFileExtension(name),
             i = name.lastIndexOf("." + ext);
         
         //Adjust file paramter to include only filename 

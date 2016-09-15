@@ -321,7 +321,7 @@ define(function (require, exports, module) {
      * Used to track the default directory for the file open dialog
      */
     //var _defaultOpenDialogFullPath = null;
-    var _defaultOpenDialogFullPath = "/home/liongold/";
+    var _defaultOpenDialogFullPath = /*"/home/liongold/";*/ "/home/ubuntu/workspace/";
 
     /**
      * @private
@@ -353,15 +353,14 @@ define(function (require, exports, module) {
                         // they still exist on disk (for faster opening)
                         var filesToOpen = [];
 
-                        if(paths.length == 1) {
+                        if(paths.length === 1) {
                             filesToOpen = paths;
                         }else{
                             paths.forEach(function (path) {
                                 filesToOpen.push(FileSystem.getFileForPath(path));
                             });
                         }
-                        console.log(paneId);
-                        console.log(filesToOpen);
+
                         MainViewManager.addListToWorkingSet(paneId, filesToOpen);
                         
                         _doOpen(paths[paths.length - 1], silent, paneId, options)

@@ -23,30 +23,30 @@
 
 
 /*jslint vars: true, plusplus: true, devel: true, nomen: true, regexp: true, indent: 4, maxerr: 50 */
-/*global define, window, PathUtils */
+/*global define, window, $, Mustache */
 
 define(function (require, exports, module) {
     "use strict";
     
-    var FileSystemError = require("filesystem/FileSystemError"),
-        FileSystemStats = require("filesystem/FileSystemStats"); //,
-    var AjaxFileSystem  = require("filesystem/impls/demo/AjaxFileSystem");
-    var Dialogs         = require("widgets/Dialogs");
-    var DefaultDialogs  = require("widgets/DefaultDialogs");
-    var FileUtils       = require("file/FileUtils");
-    //var FileWatcher     = require("filesystem/impls/demo/FileWatcherDomain");
-        //NodeFileSystem = require("filesystem/impls/demo/NodeFileSystem");
-    
-    
-    var result;
-    var statsResult;
+    var Dialogs         = require("widgets/Dialogs"),
+        FileSystemError = require("filesystem/FileSystemError"),
+        FileSystemStats = require("filesystem/FileSystemStats"),
+        FileUtils       = require("file/FileUtils"),
+        Strings         = require("strings");
+
     var interval = [];
+    
     // Brackets uses FileSystem to read from various internal paths that are not in the user's project storage. We
     // redirect core-extension access to a simple $.ajax() to read from the source code location we're running from,
     // and for now we ignore we possibility of user-installable extensions or persistent user preferences.
-    var CORE_EXTENSIONS_PREFIX = PathUtils.directory(window.location.href) + "extensions/default/";
+    //var CORE_EXTENSIONS_PREFIX = PathUtils.directory(window.location.href) + "extensions/default/";
 //    var USER_EXTENSIONS_PREFIX = "/.brackets.user.extensions$/";
 //    var CONFIG_PREFIX = "/.$brackets.config$/";
+
+    var dialogHTML = require("text!htmlContent/file-system-dialog.html");
+    var latestChosen = [];
+    
+    var FILESYSTEM_SERVER_URL = "http://brackets-on-vm-liongold.c9users.io:8081/api/";
     
     
     // Static, hardcoded file tree structure to serve up. Key is entry name, and value is either:
@@ -59,17 +59,18 @@ define(function (require, exports, module) {
     };*/
     
     
-    function _startsWith(path, prefix) {
+    /*function _startsWith(path, prefix) {
         return (path.substr(0, prefix.length) === prefix);
     }
     
     function _stripTrailingSlash(path) {
         return path[path.length - 1] === "/" ? path.substr(0, path.length - 1) : path;
-    }
+    }*/
     
-    //Copied from master branch AppshellFileSystem.js
     /**
      * Convert appshell error codes to FileSystemError values.
+     * 
+     * Copied from AppshellFileSystem.js from the master branch
      * 
      * @param {?number} err An appshell error code
      * @return {?string} A FileSystemError string, or null if there was no error code.
@@ -81,20 +82,20 @@ define(function (require, exports, module) {
         }
         
         switch (err) {
-            case /*appshell.fs.ERR_INVALID_PARAMS*/18:
-                return FileSystemError.INVALID_PARAMS;
-            case /*appshell.fs.ERR_NOT_FOUND*/34:
-                return FileSystemError.NOT_FOUND;
-            case /*appshell.fs.ERR_CANT_READ*/3:
-                return FileSystemError.NOT_READABLE;
-            case appshell.fs.ERR_CANT_WRITE:
-                return FileSystemError.NOT_WRITABLE;
-            case /*appshell.fs.ERR_UNSUPPORTED_ENCODING*/46:
-                return FileSystemError.UNSUPPORTED_ENCODING;
-            case /*appshell.fs.ERR_OUT_OF_SPACE*/54:
-                return FileSystemError.OUT_OF_SPACE;
-            case /*appshell.fs.ERR_FILE_EXISTS*/47:
-                return FileSystemError.ALREADY_EXISTS;
+        case 18:
+            return FileSystemError.INVALID_PARAMS;
+        case -2:
+            return FileSystemError.NOT_FOUND;
+        case 3:
+            return FileSystemError.NOT_READABLE;
+        case -13:
+            return FileSystemError.NOT_WRITABLE;
+        case 46:
+            return FileSystemError.UNSUPPORTED_ENCODING;
+        case 54:
+            return FileSystemError.OUT_OF_SPACE;
+        case 47:
+            return FileSystemError.ALREADY_EXISTS;
         }
         return FileSystemError.UNKNOWN;
     }
@@ -152,20 +153,43 @@ define(function (require, exports, module) {
     }*/
     
     
+    function _loadFromFileSystemServer (action, path, callback, settings) {
+        
+        if (typeof path == "undefined") {
+            path = "";
+        }
+        
+        if (typeof settings === "undefined") {
+            settings = {};
+        }
+        
+        var ajaxRequest = $.ajax(FILESYSTEM_SERVER_URL + action + "/" + path, settings);
+        
+        if (typeof callback === "function") {
+            ajaxRequest.done(function(data) {
+                callback(data);
+            });
+        }
+        
+        return ajaxRequest;
+        
+    }
+    
+    
     function stat(path, callback) {
-        /*if (_startsWith(path, CORE_EXTENSIONS_PREFIX)) {
-            AjaxFileSystem.stat(path, callback);
+        
+        if (_ignoreableFile(path)) {
+            callback(FileSystemError.NOT_FOUND);
             return;
         }
         
-        var result = _getDemoData(path);
-        if (result || result === "") {
-            callback(null, _makeStat(result));
-        } else {
+        if (path.match(/\/\$\.brackets\.config\$\/.*\.json/g)) {
             callback(FileSystemError.NOT_FOUND);
-        }*/
-        $.ajax("http://ulkk6b05c55d.liongold.koding.io:7681/api/stat/" + path, { dataType: "text"}).done(function(data) {
-            result = JSON.parse(data);
+            return;
+        }
+        
+
+        _loadFromFileSystemServer("stat", path, function(result) {
             if(result.errno) {
                 callback(_mapError(result.errno));
             }else{
@@ -181,26 +205,12 @@ define(function (require, exports, module) {
                 callback(null, fileStats);
             }
         });
+        
     }
     
     function exists(path, callback) {
-        /*stat(path, function (err) {
-            if (err) {
-                callback(null, false);
-            } else {
-                callback(null, true);
-            }
-        });*/
-        $.ajax("http://ulkk6b05c55d.liongold.koding.io:7681/api/exists/" + path, { dataType: "text"}).done(function(data) {
-            result = JSON.parse(data);
-            /*if(result.exists) {
-                callback(null, false);
-            }else if(result.errno) {
-                callback(result);
-            }else{
-                callback(null, true);
-            }*/
-            if(result.errno == 34) {
+        _loadFromFileSystemServer("exists", path, function(result) {
+            if(result.errno === 34) {
                 callback(null, false);
             }else if(result.exists) {
                 callback(null, true);
@@ -212,43 +222,23 @@ define(function (require, exports, module) {
     }
     
     function readdir(path, callback) {
-        /*if (_startsWith(path, CORE_EXTENSIONS_PREFIX)) {
-            callback("Directory listing unavailable: " + path);
-            return;
-        }
-        
-        var storeData = _getDemoData(path);
-        if (!storeData) {
-            callback(FileSystemError.NOT_FOUND);
-        } else if (typeof storeData === "string") {
-            callback(FileSystemError.INVALID_PARAMS);
-        } else {
-            var names = Object.keys(storeData);
-            var stats = [];
-            names.forEach(function (name) {
-                stats.push(_makeStat(storeData[name]));
-            });
-            callback(null, names, stats);
-        }*/
-        $.ajax("http://ulkk6b05c55d.liongold.koding.io:7681/api/readdir/" + path, { dataType: "text"}).done(function(data) {
-            result = JSON.parse(data);
+        _loadFromFileSystemServer("readdir", path, function(result) {
             if(result.errno) {
                 callback(_mapError(result.errno));
                 return;
             }
-            var count = result./*contents.*/length;
+            var count = result.length;
             if(!count) {
                 callback(null, [], [], []);
                 return;
             }
             var stats = [];
-            result./*contents.*/forEach(function(value, index) {
-                $.ajax("http://ulkk6b05c55d.liongold.koding.io:7681/api/stat/" + path + "/" + value, {dataType:"text"}).done(function(data) {
-                    statsResult = JSON.parse(data);
+            result.forEach(function(value, index) {
+                _loadFromFileSystemServer("stat", path, function(statsResult) {
                     stats[index] =  statsResult.errno || statsResult;
                     count--;
                     if(count <= 0) {
-                        callback(null, result/*.contents*/, stats);
+                        callback(null, result, stats);
                     }
                 });
             });
@@ -256,19 +246,16 @@ define(function (require, exports, module) {
     }
     
     function mkdir(path, mode, callback) {
-        //callback("Cannot modify folders on HTTP demo server");
         if(typeof mode === "function") {
             callback = mode;
             mode = parseInt("0755", 8);
         }
         var dataString = "path=" + path + "&mode=" + mode;
-        $.ajax("http://ulkk6b05c55d.liongold.koding.io:7681/api/mkdir/"/* + path + "+" + mode*/, { dataType: "text", type: "POST", data: dataString}).done(function(data) {
-            result = JSON.parse(data);
+        _loadFromFileSystemServer("mkdir", "", function(result) {
             if(result.errno) {
                 callback(_mapError(result.errno));
             }else{
-                $.ajax("http://ulkk6b05c55d.liongold.koding.io:7681/api/stat/" + path, { dataType: "text"}).done(function(data) {
-                    statsResult = JSON.parse(data);
+                _loadFromFileSystemServer("stat", path, function(statsResult) {
                     if(statsResult.errno) {
                         callback(statsResult, []);
                     }else{
@@ -276,70 +263,51 @@ define(function (require, exports, module) {
                     }
                 });
             }
-        });
+        }, { type: "POST", data: dataString });
     }
     
     function rename(oldPath, newPath, callback) {
-        //callback("Cannot modify files on HTTP demo server");
         var dataString = "oldPath=" + oldPath + "&newPath=" + newPath;
-        $.ajax("http://ulkk6b05c55d.liongold.koding.io:7681/api/rename/"/* + oldPath + "+" + newPath*/, { dataType: "text", type: "POST", data: dataString}).done(function(data) {
+        _loadFromFileSystemServer("rename", "", function(data) {
             alert(data);
-        });
+        }, { type: "POST", data: dataString });
+    }
+    
+    function _ignoreableFile(path) {
+        if (path.match(/\extensions\/default\/.*\/package.json/g) || path.match(/\extensions\/default\/.*\/requirejs-config.json/g)) {
+            return true;
+        }
+        return false;
     }
     
     function readFile(path, options, callback) {
-        console.log("Reading 'file': " + path);
-        var encoding = options.encoding || "utf-8";
-        // callback to be executed when the call to stat completes
-        //  or immediately if a stat object was passed as an argument
+
         function doReadFile(statsResult) {
             if (statsResult.size > (FileUtils.MAX_FILE_SIZE)) {
                 callback(FileSystemError.EXCEEDS_MAX_FILE_SIZE);
             } else {
-                //appshell.fs.readFile(path, encoding, function (_err, _data) {
                 options = $.param(options);
                 var dataString = "options=" + JSON.stringify(options);
-                $.ajax("http://ulkk6b05c55d.liongold.koding.io:7681/api/readFile/" + path/* + "+" + options*/, { dataType: "text", crossDomain: true, type: "POST", data: dataString }).done(function(data) {
-                    result = JSON.parse(data);
+                _loadFromFileSystemServer("readFile", path, function(result) {
                     if (result.errno) {
                         callback(_mapError(result.errno));
                     } else {
                         callback(null, result.contents, statsResult);
                     }
-                });
-                //});
+                }, { type: "POST", data: dataString });
             }
         }
 
-        if (path === "/$.brackets.config$/brackets.json" || path === "/$.brackets.config$/state.json") {
-            console.log("using Ajaxfilesystem");
-            //AjaxFileSystem.readFile(path, callback);
-            callback(FileSystemError.UNKNOWN);
-        //if (!(_startsWith(path, CORE_EXTENSIONS_PREFIX))) {
-            //AjaxFileSystem.readFile(path, callback);
-            return;
-        //}
-        
-            
-        }
-        //if(path)
-        
-        /*var storeData = _getDemoData(path);
-        if (!storeData && storeData !== "") {
+        if (_ignoreableFile(path)) {
             callback(FileSystemError.NOT_FOUND);
-        } else if (typeof storeData !== "string") {
-            callback(FileSystemError.INVALID_PARAMS);
-        } else {
-            var name = _nameFromPath(path);
-            callback(null, storeData, _makeStat(storeData[name]));
-        }*/
-        /*options = $.param(options);
-        var dataString = "options=" + JSON.stringify(options);
-        $.ajax("http://ulkk6b05c55d.liongold.koding.io:7681/api/readFile/" + path/* + "+" + options*///, { dataType: "text", crossDomain: true, type: "POST", data: dataString }).done(function(data) {
-            /*alert(data);
-            callback(FileSystemError.UNKNOWN);
-        });*/
-        //callback(FileSystemError.NOT_FOUND);
+            return;
+        }
+        
+        if (path.match(/\/\$\.brackets\.config\$\/.*\.json/g)) {
+            callback(FileSystemError.NOT_FOUND);
+            return;
+        }
+        
         if(options.stat) {
             doReadFile(options.stat);
         }else{
@@ -355,17 +323,21 @@ define(function (require, exports, module) {
     
     
     function writeFile(path, data, options, callback) {
-        //callback("Cannot save to HTTP demo server");
-        /*options = $.param(options);
-        var dataString = "data=" + encodeURIComponent(data) + "&options=" + JSON.strigify(options);
-        $.ajax("http://ulkk6b05c55d.liongold.koding.io:7681/api/writeFile/" + path/* + "+" + data + "+" + options*//*, { dataType: "text", type: "POST", data: dataString}).done(function(data) {
-            alert(data);
-        });*/
         var encoding = options.encoding || "utf-8";
+        
+        if (_ignoreableFile(path)) {
+            callback(FileSystemError.NOT_FOUND);
+            return;
+        }
+        
+        if (path.match(/\/\$\.brackets\.config\$\/.*\.json/g)) {
+            callback(FileSystemError.NOT_FOUND);
+            return;
+        }
+        
         function _finishWrite(created) {
             var dataString = "data=" + encodeURIComponent(data) + "&encoding=" + encoding;
-            $.ajax("http://ulkk6b05c55d.liongold.koding.io:7681/api/writeFile/" + path, { dataType:"text", type:"POST", data:dataString}).done(function(data) {
-                result = JSON.parse(data);
+            _loadFromFileSystemServer("writeFile", path, function(result) {
                 if(result.errno) {
                     callback(_mapError(result.errno));
                 }else{
@@ -373,7 +345,7 @@ define(function (require, exports, module) {
                         callback(err, stats, created);
                     });
                 }
-            });
+            }, { dataType:"text", type:"POST", data:dataString });
         }
         stat(path, function (err, stats) {
             if (err) {
@@ -382,6 +354,7 @@ define(function (require, exports, module) {
                     _finishWrite(true);
                     break;
                 default:
+                    alert("Error called");
                     callback(err);
                 }
                 return;
@@ -391,7 +364,6 @@ define(function (require, exports, module) {
                 console.error("Blind write attempted: ", path, stats._hash, options.expectedHash);
 
                 if (options.hasOwnProperty("expectedContents")) {
-                    //appshell.fs.readFile(path, encoding, function (_err, _data) {
                     readFile(path, {"encoding": encoding}, function(_err, _data) {
                         if (_err || _data !== options.expectedContents) {
                             callback(FileSystemError.CONTENTS_MODIFIED);
@@ -412,29 +384,27 @@ define(function (require, exports, module) {
     }
     
     function unlink(path, callback) {
-        //callback("Cannot modify files on HTTP demo server");
-        $.ajax("http://ulkk6b05c55d.liongold.koding.io:7681/api/unlink/" + path, { dataType: "text"}).done(function(data) {
-            result = JSON.parse(data);
+        _loadFromFileSystemServer("unlink", path, function(result) {
             callback(_mapError(result.errno));
         });
     }
     
     function moveToTrash(path, callback) {
-        callback("This feature has not been implemented yet. ");
-        //callback("Cannot delete files on HTTP demo server");
+        alert("This feature has not been implemented yet. ");
     }
     
     function initWatchers(changeCallback, offlineCallback) {
+        alert("initWatchers");
         // Ignore - since this FS is immutable, we're never going to call these
-        var interval = [];
+        interval = [];
     }
     
     function watchPath(path, callback) {
         //console.warn("File watching is not supported on immutable HTTP demo server");
-        $.ajax("http://ulkk6b05c55d.liongold.koding.io:7681/api/watch/" + path, { dataType: "text" }).done(function(data) {
-            interval[path] = setInterval(function() {
-                $.ajax("http://ulkk6b05c55d.liongold.koding.io:7681/api/watcherCheck/" + path, { dataType: "text" }).done(function(data) {
-                    var result = JSON.parse(data);
+        alert("watchPath");
+        _loadFromFileSystemServer("watch", path, function(data) {
+            interval[path] = window.setInterval(function() {
+                _loadFromFileSystemServer("watcherCheck", path, function(result) {
                     $("body").trigger({
                         "path": result.path,
                         "event": result.event,
@@ -448,340 +418,133 @@ define(function (require, exports, module) {
     
     function unwatchPath(path, callback) {
         //callback();
-        clearTimeout(interval[path]);
+        window.clearTimeout(interval[path]);
     }
     
     function unwatchAll(callback) {
         //callback();
         for(var i = 0; i < interval.length; i++) {
-            clearTimeout(interval[i]);
+            window.clearTimeout(interval[i]);
         }
     }
     
-    function showOpenDialog(allowMultipleSelection, chooseDirectories, title, initialPath, fileTypes, callback) {
-        // FIXME
-        //throw new Error();
-        //filetypes not implemented
+    function _loadFileSystemDialog(path, proposedNewFilename, directoriesOnly, fullRender, allowMultipleSelection, title, type, callback) {
+        var dataString = "",
+            dialog,
+            newpath = "";
         
-        // Build up list of items 
-        var type;
-        if(allowMultipleSelection) {
-            console.log("Multiple selections have not been implemented yet. ");
+        if(directoriesOnly) {
+            dataString = "directoriesOnly=true";
         }
-        var dataString = "directoriesOnly=" + chooseDirectories;
-        $.ajax("http://ulkk6b05c55d.liongold.koding.io:7681/api/getItems/" + initialPath/* + "+" + options*/, { dataType: "text", crossDomain: true, type: "POST", data: dataString }).done(function(data) {
-            var message = "<ul class=\"folder-list-menu\">";
-            result = JSON.parse(data);
-            //console.log(data);
-            for(var i = 0; i < result.length; i++) {
-                //console.log(data[i]);
-                type = result[i].isDirectory;
-                message += "<li class=\"folder_goto\" data-folder-path=\"" + result[i].fullPath + "\" data-folder-type=\"" + type + "\">" + result[i].name + "</li>";
-            }
-            message += "</ul>";
-            var latestChosen = "";
-        //});
         
-        //OLD CODE:
-        /*var items = [];
-        var dataString = "directoriesOnly=" + chooseDirectories;
-        $.ajax("http://ulkk6b05c55d.liongold.koding.io:7681/api/getItems/" + initialPath/* + "+" + options*//*, { dataType: "text", crossDomain: true, type: "POST", data: dataString }).done(function(data) {
-            alert(data);
-            items = data;
-            callback(FileSystemError.UNKNOWN);
-            console.log(items);
-            var itemListDiv = $(document.createElement("div"));
-            itemListDiv.addClass("container-scrollable");
-            var itemList = $(document.createElement("ul"));
-            itemListDiv.append(itemList);
-            // Loop over returned value
-            for(var i = 0; i < items.length; I++) {
-                var itemLi = $(document.createElement("li"));
-                itemLi.text(items[i]["name"]);
-                itemLi.id(items[i]["fullPath"]);
-            }*/
-            var dialog = Dialogs.showModalDialog(
-                DefaultDialogs.DIALOG_ID_INFO,
-                title,
-                message,
-                [
-                    {
-                        className: Dialogs.DIALOG_BTN_CLASS_NORMAL,
-                        id: Dialogs.DIALOG_BTN_CANCEL,
-                        text: "Cancel"
-                    },
-                    {
-                        className: Dialogs.DIALOG_BTN_CLASS_PRIMARY,
-                        id: "open",
-                        text: "Open"
+        _loadFromFileSystemServer("getItems", path, function(data) {
+            var dialogInfo = {
+                folderContents: data,
+                Strings: Strings,
+                latestChosen: path,
+                proposedNewFilename: proposedNewFilename,
+                title: title,
+                save_dialog: ((type === "save") ? true : false),
+            };
+            
+            if(fullRender) {
+                dialog = Dialogs.showModalDialogUsingTemplate(Mustache.render(dialogHTML, dialogInfo), false);
+                _attachEventHandlers();
+            }else{
+                $(".modal.instance.in:last").html(Mustache.render(dialogHTML, dialogInfo));
+                _attachEventHandlers();
+            }
+            
+            function _attachEventHandlers () {
+                $(".contents-list").on("click", "a", function(event) {
+                    $(this).addClass("folder-link-selected");
+                    newpath = $(this).data("folder-path");
+                    
+                    if($(this).data("folder-type") === "up-level") {
+                        //Remove part after second last / and set as newpath
+                        newpath = newpath.substring(0, newpath.lastIndexOf("/", (newpath.length - 2)));
+                        console.log(newpath);
                     }
-                ],
-                false
-            );
-            
-            var $element = dialog.getElement();
-            
-            //$(".folder_goto").click(function(event) {
-            $(".folder-list-menu").on("click", "li", function(event) {
-                //Get info about clicked folder 
-                var newpath = $(this).data("folder-path");
-                latestChosen = newpath;
-                //if(!chooseDirectories) {
-                    if($(this).data("folder-type") === true) {
-                        $(this).parent().text("Loading...");
-                        var elem = event.currentTarget;
-                        $.ajax("http://ulkk6b05c55d.liongold.koding.io:7681/api/getItems/" + newpath/* + "+" + options*/, { dataType: "text", crossDomain: true, type: "POST", data: dataString }).done(function(data) {
-                            result = JSON.parse(data);
-                            //message = "";
-                            if(result.length > 0) {
-                                message = "<ul class=\"folder-list-menu\">";
-                                for(var i = 0; i < result.length; i++) {
-                                    var type = result[i].isDirectory;
-                                    message += "<li class=\"folder_goto\" data-folder-path=\"" + result[i].fullPath + "\" data-folder-type=\"" + type + "\">" + result[i].name + "</li>";
-                                }
-                                message += "</ul>";
-                            }else{
-                                if(chooseDirectories) {
-                                    message = "<em class=\"folder-list-menu\">No folders in here</em>";
-                                }else{
-                                    message = "<em class=\"folder-list-menu\">Empty folder</em>";
-                                }
-                            }
-                            /*console.log($(this));
-                            console.log($(this)[0]);
-                            console.log($(this).parent());
-                            console.log($(this).parent().parent());
-                            console.log($(this).parent().parent().parent().parent());
-                            console.log(message);
-                            console.log(listelement);
-                            console.log(listelement[0]);
-                            console.log(listelement[0].parent());
-                            console.log(listelement.parent().html(message));
-                            console.log($(listelement[0]).parent());
-                            listelement.parent().html(message);*/
-                            //console.log($(elem));
-                            //console.log(elem);
-                            $(".folder-list-menu").html(message);
-                            
-                        });
+                    
+                    if(!allowMultipleSelection) {
+                        latestChosen = [newpath];
+                    } else {
+                        latestChosen.push(newpath);
                     }
-                //}
-            });
+                    
+                    if($(this).data("folder-type") === "directory" || $(this).data("folder-type") === "up-level") {
+                        $(this).removeClass("folder-link-selected");
+                        _loadFileSystemDialog(newpath, proposedNewFilename, directoriesOnly, false, false, title);
+                    }
+                });
+            }
             
-            $element.one("buttonClick", function(event, action) {
+
+            if(fullRender) {
+                callback(dialog);
+            }else{
+                return true;
+            }
+            
+        }, { type: "POST", data: dataString });
+        
+    }    
+    
+    function showOpenDialog(allowMultipleSelection, chooseDirectories, title, initialPath, fileTypes, callback) {
+
+        
+        _loadFileSystemDialog(initialPath, title, chooseDirectories, true, allowMultipleSelection, title, "open", function(dialog) {
+            var $openElement = dialog.getElement();
+            
+            $openElement.one("buttonClick", function(event, action) {
                 if(action === Dialogs.DIALOG_BTN_CANCEL) {
                     dialog.close();
                 }else{
-                    console.log(latestChosen);
-                    /*readFile(latestChosen, {}, function(error, file, stats) {
-                        callback(error, file, stats);
-                    });*/
-                    //if(allowMultipleSelection) {
-                        latestChosen = [latestChosen];
-                    //}
                     callback(0, latestChosen);
                     dialog.close();
                 }
-                //console.log(latestChosen);
-                //console.log(event);
-                //console.log(action);
-                //dialog.close();
-                //dialog.close();
             });
         });
-        /*console.log(items);
-        var itemListDiv = $(document.createElement("div"));
-        itemListDiv.addClass("container-scrollable");
-        var itemList = $(document.createElement("ul"));
-        itemListDiv.append(itemList);
-        // Loop over returned value
-        Dialogs.showModalDialog(
-            DefaultDialogs.DIALOG_ID_INFO,
-            title,
-            itemListDiv,
-            [
-                {
-                    className: Dialogs.DIALOG_BTN_CLASS_NORMAL,
-                    id: Dialogs.DIALOG_BTN_CANCEL,
-                    text: "Cancel"
-                },
-                {
-                    className: Dialogs.DIALOG_BTN_CLASS_PRIMARY,
-                    id: "open",
-                    text: "Open"
-                }
-            ]
-        );*/
     }
     
     function showSaveDialog(title, initialPath, proposedNewFilename, callback) {
-        // FIXME
-        //throw new Error();
-        // Build up list of items 
-        var type;
-        var nameInput = "<p><input type=\"text\" id=\"save_file_name\" value=\"" + proposedNewFilename + "\" placeholder=\"File name\"></p>";
-        //var finalString = "";
-        /*if(allowMultipleSelection) {
-            console.log("Multiple selections have not been implemented yet. ");
-        }*/
-        var dataString = "directoriesOnly=true"/* + chooseDirectories*/;
-        $.ajax("http://ulkk6b05c55d.liongold.koding.io:7681/api/getItems/" + initialPath/* + "+" + options*/, { dataType: "text", crossDomain: true, type: "POST", data: dataString }).done(function(data) {
-            var message = "<ul class=\"folder-list-menu-save\">";
-            result = JSON.parse(data);
-            //console.log(data);
-            for(var i = 0; i < result.length; i++) {
-                //console.log(data[i]);
-                type = result[i].isDirectory;
-                message += "<li class=\"folder_goto\" data-folder-path=\"" + result[i].fullPath + "\" data-folder-type=\"" + type + "\">" + result[i].name + "</li>";
-            }
-            message += "</ul>";
-            var latestChosen = initialPath;
-        //});
-        
-        //OLD CODE:
-        /*var items = [];
-        var dataString = "directoriesOnly=" + chooseDirectories;
-        $.ajax("http://ulkk6b05c55d.liongold.koding.io:7681/api/getItems/" + initialPath/* + "+" + options*//*, { dataType: "text", crossDomain: true, type: "POST", data: dataString }).done(function(data) {
-            alert(data);
-            items = data;
-            callback(FileSystemError.UNKNOWN);
-            console.log(items);
-            var itemListDiv = $(document.createElement("div"));
-            itemListDiv.addClass("container-scrollable");
-            var itemList = $(document.createElement("ul"));
-            itemListDiv.append(itemList);
-            // Loop over returned value
-            for(var i = 0; i < items.length; I++) {
-                var itemLi = $(document.createElement("li"));
-                itemLi.text(items[i]["name"]);
-                itemLi.id(items[i]["fullPath"]);
-            }*/
-            var saveDialog = Dialogs.showModalDialog(
-                DefaultDialogs.DIALOG_ID_INFO,
-                title,
-                (message + nameInput),
-                [
-                    {
-                        className: Dialogs.DIALOG_BTN_CLASS_NORMAL,
-                        id: Dialogs.DIALOG_BTN_CANCEL,
-                        text: "Cancel"
-                    },
-                    {
-                        className: Dialogs.DIALOG_BTN_CLASS_PRIMARY,
-                        id: Dialogs.DIALOG_BTN_SAVE_AS,
-                        text: "Save As"
-                    }
-                ],
-                false
-            );
+        latestChosen = initialPath;
             
-            var $saveElement = saveDialog.getElement();
-            
-            //$(".folder_goto").click(function(event) {
-            $(".folder-list-menu-save").on("click", "li", function(event) {
-                //Get info about clicked folder 
-                var newpath = $(this).data("folder-path");
-                latestChosen = newpath;
-                //if(!chooseDirectories) {
-                    if($(this).data("folder-type") === true) {
-                        $(this).parent().text("Loading...");
-                        var elem = event.currentTarget;
-                        var dataString = "directoriesOnly=true";
-                        $.ajax("http://ulkk6b05c55d.liongold.koding.io:7681/api/getItems/" + newpath/* + "+" + options*/, { dataType: "text", crossDomain: true, type: "POST", data: dataString }).done(function(data) {
-                            result = JSON.parse(data);
-                            //message = "";
-                            if(result.length > 0) {
-                                message = "<ul class=\"folder-list-menu-save\">";
-                                for(var i = 0; i < result.length; i++) {
-                                    var type = result[i].isDirectory;
-                                    message += "<li class=\"folder_goto\" data-folder-path=\"" + result[i].fullPath + "\" data-folder-type=\"" + type + "\">" + result[i].name + "</li>";
-                                }
-                                message += "</ul>";
-                            }else{
-                                message = "<em class=\"folder-list-menu\">Empty folder</em>";
-                            }
-                            /*console.log($(this));
-                            console.log($(this)[0]);
-                            console.log($(this).parent());
-                            console.log($(this).parent().parent());
-                            console.log($(this).parent().parent().parent().parent());
-                            console.log(message);
-                            console.log(listelement);
-                            console.log(listelement[0]);
-                            console.log(listelement[0].parent());
-                            console.log(listelement.parent().html(message));
-                            console.log($(listelement[0]).parent());
-                            listelement.parent().html(message);*/
-                            //console.log($(elem));
-                            //console.log(elem);
-                            $(".folder-list-menu-save").html(message/* + nameInput*/);
-                            
-                        });
-                    }
-                //}
-            });
-            
+        _loadFileSystemDialog(initialPath, proposedNewFilename, true, true, false, Strings.SAVE_FILE_AS, "save", function(dialog) {
+            var $saveElement = dialog.getElement();
             $saveElement.one("buttonClick", function(event, action) {
                 if(action === Dialogs.DIALOG_BTN_CANCEL) {
-                    saveDialog.close();
+                    dialog.close();
                 }else{
                     console.log(latestChosen);
                     var filename = $("#save_file_name").val();
-                    /*readFile(latestChosen, {}, function(error, file, stats) {
-                        callback(error, file, stats);
-                    });*/
-                    //if(allowMultipleSelection) {
-                    //    latestChosen = [latestChosen];
-                    //}
                     callback(0, (latestChosen + "/" + filename));
-                    saveDialog.close();
+                    dialog.close();
                 }
-                //console.log(latestChosen);
-                //console.log(event);
-                //console.log(action);
-                //dialog.close();
-                //dialog.close();
             });
-        });
-        /*console.log(items);
-        var itemListDiv = $(document.createElement("div"));
-        itemListDiv.addClass("container-scrollable");
-        var itemList = $(document.createElement("ul"));
-        itemListDiv.append(itemList);
-        // Loop over returned value
-        Dialogs.showModalDialog(
-            DefaultDialogs.DIALOG_ID_INFO,
-            title,
-            itemListDiv,
-            [
-                {
-                    className: Dialogs.DIALOG_BTN_CLASS_NORMAL,
-                    id: Dialogs.DIALOG_BTN_CANCEL,
-                    text: "Cancel"
-                },
-                {
-                    className: Dialogs.DIALOG_BTN_CLASS_PRIMARY,
-                    id: "open",
-                    text: "Open"
-                }
-            ]
-        );*/
+        }); 
     }
-
+    
+    function _checkFSServerAvailability(callback) {
+        _loadFromFileSystemServer("ping")
+            .success(function() {
+                callback(true);
+            })
+            .fail(function() {
+                callback(false);
+            });
+    }
     
     $(document).ready(function() {
-        setInterval(function() {
-            $("#server-connectivity-check").removeClass("connectionInactive");
-            $("#server-connectivity-check").removeClass("connectionActive");
-            $.ajax("http://ulkk6b05c55d.liongold.koding.io:7681/api/ping/")
-                .success(function() {
-                    console.log("connected successfully");
+        window.setInterval(function() {
+            $("#server-connectivity-check").removeClass("connectionInactive connectionActive");
+            _checkFSServerAvailability(function (isConnected) {
+                if(isConnected) {
                     $("#server-connectivity-check").addClass("connectionActive");
-                })
-                .fail(function() {
-                    console.log("connection failed");
+                } else {
                     $("#server-connectivity-check").addClass("connectionInactive");
-                });
+                }
+            });
         }, 60000);
     });
     

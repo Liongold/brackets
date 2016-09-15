@@ -1,0 +1,22 @@
+<div class="modal">
+    <div class="modal-header">
+        <h1 class="dialog-title">{{title}}</h1>
+    </div>
+    <div class="modal-body">
+        <div class="contents-list">
+            <p class="folder-link-parent"><a class="folder-link" data-folder-type="up-level" data-folder-path="{{latestChosen}}"><i class="contents-icon">&#9650;</i> Up</a></p>
+            {{#folderContents}}
+                <p class="folder-link-parent"><a class="folder-link" data-folder-type="{{type}}" data-folder-path="{{fullPath}}"><i class="contents-icon">&#9679;</i> {{name}}</a></p>
+            {{/folderContents}}
+        </div>
+        {{#save_dialog}}
+        <div>
+            <p><input type="text" id="save_file_name" value="{{proposedNewFilename}}" placeholder="File name (please include extension)" style="margin-top: 5px"></p>
+        </div>
+        {{/save_dialog}}
+    </div>
+    <div class="modal-footer">
+        <button class="dialog-button btn" data-button-id="cancel">{{Strings.CANCEL}}</button>
+        <button class="dialog-button btn primary" data-button-id="ok">{{Strings.OK}}</button>
+    </div>
+</div>
