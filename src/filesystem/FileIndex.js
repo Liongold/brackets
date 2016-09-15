@@ -157,6 +157,9 @@ define(function (require, exports, module) {
     FileIndex.prototype.getEntry = function (path) {
         console.log("getEntry");
         console.log(this._index);
+        console.log(/$.brackets.config$/);
+        console.log("Dollar " + $);
+        console.log("Dollar dot Brackets  " + $.brackets);
         return this._index[path];
     };
     

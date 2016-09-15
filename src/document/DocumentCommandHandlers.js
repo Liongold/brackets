@@ -321,7 +321,7 @@ define(function (require, exports, module) {
      * Used to track the default directory for the file open dialog
      */
     //var _defaultOpenDialogFullPath = null;
-    var _defaultOpenDialogFullPath = "/home/liongold/";
+    var _defaultOpenDialogFullPath = /*"/home/liongold/";*/ "/home/ubuntu/workspace/";
 
     /**
      * @private
