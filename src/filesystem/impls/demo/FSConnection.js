@@ -5,7 +5,7 @@ var queryString = require('querystring');
 var url = require('url');
 
 //Define Required Variables
-var action, command, path, result, method, postData, parameters, requestPath, formBody = "", events = [];
+var action, command, path, /*result, */method, /*postData, */parameters, requestPath, formBody = "", events = [], parsedPostData;
 var options = {
     'encoding': 'utf-8'
 };
@@ -15,7 +15,7 @@ var installUrl = "/Brackets/dist/";
 http.createServer(function(request, response) {
 
     //Set Required Headers
-    response.setHeader('Access-Control-Allow-Origin', 'http://ulkk6b05c55d.liongold.koding.io');
+    response.setHeader('Access-Control-Allow-Origin', /*'http://ulkk6b05c55d.liongold.koding.io'*/ 'http://brackets-on-vm-liongold.c9users.io');
     response.setHeader('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
     response.setHeader('Access-Control-Allow-Headers', 'Content-Type');
     response.setHeader('Content-Type', 'application/json');
@@ -70,11 +70,14 @@ http.createServer(function(request, response) {
         }
         
         if(path.substring(0, installUrl.length) === installUrl) {
-            path = "/home/liongold/Web" + path;
+            //path = "/home/liongold/Web" + path;
+            console.log(path);
+            path = "/home/ubuntu/workspace" + path;
         }
         
         switch (command) {
             case 'writeFile':
+                console.log("write attempt");
                 fs.writeFile(path, parsedPostData.data, options, sendResponse);
                 break;
             
@@ -129,7 +132,7 @@ http.createServer(function(request, response) {
                             try {
                                 process.chdir(path);
                             }catch(e) {
-                                console.log(e);
+                                console.log("Error" + e);
                             }
                             fs.realpath(file, function(errors, fullPath) {
                                 fs.stat(file, function(errors, statistics) {
@@ -137,7 +140,8 @@ http.createServer(function(request, response) {
                                         {
                                             "name": file,
                                             "fullPath": fullPath,
-                                            "isDirectory": statistics.isDirectory()
+                                            "isDirectory": statistics.isDirectory(),
+                                            "type": (statistics.isDirectory() ? "directory" : "file")
                                         }
                                     );
                                     
@@ -160,7 +164,9 @@ http.createServer(function(request, response) {
             case 'stat':
                 //fs.stat(path, sendResponse);
                 fs.stat(path, function(errors, statistics) {
+                    //console.log("Stat error " + errors);
                     if(errors) {
+                        console.log("Stat error " + errors);
                         sendResponse(errors, []);
                     }else{
                         statistics.isFile = statistics.isFile();
@@ -223,7 +229,7 @@ http.createServer(function(request, response) {
                                     'filename': filename,
                                     'path': path
                             });
-                            console.log(events);
+                            console.log("Watcher event " + events);
                         });                  
                     }
                 });
@@ -252,7 +258,7 @@ http.createServer(function(request, response) {
                         sendResponse(null, reply);
                         return;
                     }
-                    console.log(reply);
+                    console.log("Watcher Check Reply " + reply);
                 }
                 sendResponse({});
                 break;
@@ -283,4 +289,4 @@ http.createServer(function(request, response) {
     });
     
 
-}).listen(7681);
+}).listen(/*7681*/8081);
