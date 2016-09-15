@@ -1,8 +1,8 @@
 # IMPLEMENT PASSWORD PROTECTION
 AuthType Basic
 AuthName "Restricted Access"
-AuthUserFile /home/liongold/apache-access-permissions
-Require user brackets
+AuthUserFile /home/ubuntu/apache-access-permissions
+Require user brackets_user
 # END
 # BEGIN GZIP
 <ifmodule mod_deflate.c>
