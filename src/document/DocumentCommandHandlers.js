@@ -353,7 +353,7 @@ define(function (require, exports, module) {
                         // they still exist on disk (for faster opening)
                         var filesToOpen = [];
 
-                        if(paths.length == 1) {
+                        if(paths.length === 1) {
                             filesToOpen = paths;
                         }else{
                             paths.forEach(function (path) {

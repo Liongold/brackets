@@ -30,9 +30,9 @@ define(function (require, exports, module) {
     
     var FileSystemError = require("filesystem/FileSystemError"),
         FileSystemStats = require("filesystem/FileSystemStats"); //,
-    var AjaxFileSystem  = require("filesystem/impls/demo/AjaxFileSystem");
+    //var AjaxFileSystem  = require("filesystem/impls/demo/AjaxFileSystem");
     var Dialogs         = require("widgets/Dialogs");
-    var DefaultDialogs  = require("widgets/DefaultDialogs");
+    //var DefaultDialogs  = require("widgets/DefaultDialogs");
     var FileUtils       = require("file/FileUtils");
     var Strings         = require("strings");
     //var FileWatcher     = require("filesystem/impls/demo/FileWatcherDomain");
@@ -86,20 +86,20 @@ define(function (require, exports, module) {
         
         //alert(err);
         switch (err) {
-            case /*appshell.fs.ERR_INVALID_PARAMS*/18:
-                return FileSystemError.INVALID_PARAMS;
-            case /*appshell.fs.ERR_NOT_FOUND*//*34*/-2:
-                return FileSystemError.NOT_FOUND;
-            case /*appshell.fs.ERR_CANT_READ*/3:
-                return FileSystemError.NOT_READABLE;
-            case appshell.fs.ERR_CANT_WRITE:
-                return FileSystemError.NOT_WRITABLE;
-            case /*appshell.fs.ERR_UNSUPPORTED_ENCODING*/46:
-                return FileSystemError.UNSUPPORTED_ENCODING;
-            case /*appshell.fs.ERR_OUT_OF_SPACE*/54:
-                return FileSystemError.OUT_OF_SPACE;
-            case /*appshell.fs.ERR_FILE_EXISTS*/47:
-                return FileSystemError.ALREADY_EXISTS;
+        case /*appshell.fs.ERR_INVALID_PARAMS*/18:
+            return FileSystemError.INVALID_PARAMS;
+        case /*appshell.fs.ERR_NOT_FOUND*//*34*/-2:
+            return FileSystemError.NOT_FOUND;
+        case /*appshell.fs.ERR_CANT_READ*/3:
+            return FileSystemError.NOT_READABLE;
+        case appshell.fs.ERR_CANT_WRITE:
+            return FileSystemError.NOT_WRITABLE;
+        case /*appshell.fs.ERR_UNSUPPORTED_ENCODING*/46:
+            return FileSystemError.UNSUPPORTED_ENCODING;
+        case /*appshell.fs.ERR_OUT_OF_SPACE*/54:
+            return FileSystemError.OUT_OF_SPACE;
+        case /*appshell.fs.ERR_FILE_EXISTS*/47:
+            return FileSystemError.ALREADY_EXISTS;
         }
         return FileSystemError.UNKNOWN;
     }
@@ -205,7 +205,7 @@ define(function (require, exports, module) {
             }else{
                 callback(null, true);
             }*/
-            if(result.errno == 34) {
+            if(result.errno === 34) {
                 callback(null, false);
             }else if(result.exists) {
                 callback(null, true);
@@ -294,7 +294,7 @@ define(function (require, exports, module) {
     
     function readFile(path, options, callback) {
         console.log("Reading 'file': " + path);
-        var encoding = options.encoding || "utf-8";
+        //var encoding = options.encoding || "utf-8";
         // callback to be executed when the call to stat completes
         //  or immediately if a stat object was passed as an argument
         function doReadFile(statsResult) {
@@ -508,7 +508,7 @@ define(function (require, exports, module) {
                 }
                 
                 latestChosen = newpath;
-                if($(this).data("folder-type") == "directory") {
+                if($(this).data("folder-type") === "directory") {
                     _loadFileSystemDialog(newpath, proposedNewFilename, true, false, false);
                 }
             });
@@ -551,188 +551,9 @@ define(function (require, exports, module) {
         });
     }
     
-    function showOpenDialog2(allowMultipleSelection, chooseDirectories, title, initialPath, fileTypes, callback) {
-        // FIXME
-        //throw new Error();
-        //filetypes not implemented
-        
-        // Build up list of items 
-        var type;
-        if(allowMultipleSelection) {
-            console.log("Multiple selections have not been implemented yet. ");
-        }
-        var dataString = "directoriesOnly=" + chooseDirectories;
-        $.ajax("http://brackets-on-vm-liongold.c9users.io:8081/api/getItems/" + initialPath/* + "+" + options*/, { dataType: "text", crossDomain: true, type: "POST", data: dataString }).done(function(data) {
-            var message = "<ul class=\"folder-list-menu\">";
-            result = JSON.parse(data);
-            //console.log(data);
-            message += "<li class=\"folder_goto\" data-folder-path=\"" + initialPath + "\" data-folder-type=\"up-level\">Up</li>";
-            for(var i = 0; i < result.length; i++) {
-                //console.log(data[i]);
-                type = "directory"; //result[i].isDirectory;
-                message += "<li class=\"folder_goto\" data-folder-path=\"" + result[i].fullPath + "\" data-folder-type=\"" + type + "\">" + result[i].name + "</li>";
-            }
-            message += "</ul>";
-            var latestChosen = "";
-        //});
-        
-        //OLD CODE:
-        /*var items = [];
-        var dataString = "directoriesOnly=" + chooseDirectories;
-        $.ajax("http://ulkk6b05c55d.liongold.koding.io:7681/api/getItems/" + initialPath/* + "+" + options*//*, { dataType: "text", crossDomain: true, type: "POST", data: dataString }).done(function(data) {
-            alert(data);
-            items = data;
-            callback(FileSystemError.UNKNOWN);
-            console.log(items);
-            var itemListDiv = $(document.createElement("div"));
-            itemListDiv.addClass("container-scrollable");
-            var itemList = $(document.createElement("ul"));
-            itemListDiv.append(itemList);
-            // Loop over returned value
-            for(var i = 0; i < items.length; I++) {
-                var itemLi = $(document.createElement("li"));
-                itemLi.text(items[i]["name"]);
-                itemLi.id(items[i]["fullPath"]);
-            }*/
-            var dialog = Dialogs.showModalDialog(
-                DefaultDialogs.DIALOG_ID_INFO,
-                title,
-                message,
-                [
-                    {
-                        className: Dialogs.DIALOG_BTN_CLASS_NORMAL,
-                        id: Dialogs.DIALOG_BTN_CANCEL,
-                        text: "Cancel"
-                    },
-                    {
-                        className: Dialogs.DIALOG_BTN_CLASS_PRIMARY,
-                        id: "open",
-                        text: "Open"
-                    }
-                ],
-                false
-            );
-            
-            var $element = dialog.getElement();
-            
-            //$(".folder_goto").click(function(event) {
-            $(".folder-list-menu").on("click", "li", function(event) {
-                //Get info about clicked folder 
-                var newpath = $(this).data("folder-path");
-                latestChosen = newpath;
-                //if(!chooseDirectories) {
-                    if($(this).data("folder-type") === "directory") {
-                        $(this).parent().text("Loading...");
-                        var elem = event.currentTarget;
-                        $.ajax("http://brackets-on-vm-liongold.c9users.io:8081/api/getItems/" + newpath/* + "+" + options*/, { dataType: "text", crossDomain: true, type: "POST", data: dataString }).done(function(data) {
-                            result = JSON.parse(data);
-                            //message = "";
-                            if(result.length > 0) {
-                                message = "<ul class=\"folder-list-menu\">";
-                                message += "<li class=\"folder_goto\" data-folder-path=\"" + latestChosen + "\" data-folder-type=\"up-level\">Up</li>";
-                                for(var i = 0; i < result.length; i++) {
-                                    var type = "directory"; //result[i].isDirectory;
-                                    message += "<li class=\"folder_goto\" data-folder-path=\"" + result[i].fullPath + "\" data-folder-type=\"" + type + "\">" + result[i].name + "</li>";
-                                }
-                                message += "</ul>";
-                            }else{
-                                if(chooseDirectories) {
-                                    message = "<em class=\"folder-list-menu\">No folders in here</em>";
-                                }else{
-                                    message = "<em class=\"folder-list-menu\">Empty folder</em>";
-                                }
-                            }
-                            /*console.log($(this));
-                            console.log($(this)[0]);
-                            console.log($(this).parent());
-                            console.log($(this).parent().parent());
-                            console.log($(this).parent().parent().parent().parent());
-                            console.log(message);
-                            console.log(listelement);
-                            console.log(listelement[0]);
-                            console.log(listelement[0].parent());
-                            console.log(listelement.parent().html(message));
-                            console.log($(listelement[0]).parent());
-                            listelement.parent().html(message);*/
-                            //console.log($(elem));
-                            //console.log(elem);
-                            $(".folder-list-menu").html(message);
-                            
-                        });
-                    }else if($(this).data("folder-type") === "up-level"){
-                        $.ajax("http://brackets-on-vm-liongold.c9users.io:8081/api/getItems/" + newpath/* + "+" + options*/, { dataType: "text", crossDomain: true, type: "POST", data: dataString }).done(function(data) {
-                            result = JSON.parse(data);
-                            //message = "";
-                            if(result.length > 0) {
-                                message = "<ul class=\"folder-list-menu\">";
-                                message += "<li class=\"folder_goto\" data-folder-path=\"" + latestChosen + "\" data-folder-type=\"up-level\">Up</li>";
-                                for(var i = 0; i < result.length; i++) {
-                                    var type = result[i].isDirectory;
-                                    message += "<li class=\"folder_goto\" data-folder-path=\"" + result[i].fullPath + "\" data-folder-type=\"" + type + "\">" + result[i].name + "</li>";
-                                }
-                                message += "</ul>";
-                            }else{
-                                if(chooseDirectories) {
-                                    message = "<em class=\"folder-list-menu\">No folders in here</em>";
-                                }else{
-                                    message = "<em class=\"folder-list-menu\">Empty folder</em>";
-                                }
-                            }
-                            $(".folder-list-menu").html(message);
-                        });
-                    }
-                //}
-            });
-            
-            $element.one("buttonClick", function(event, action) {
-                if(action === Dialogs.DIALOG_BTN_CANCEL) {
-                    dialog.close();
-                }else{
-                    console.log(latestChosen);
-                    /*readFile(latestChosen, {}, function(error, file, stats) {
-                        callback(error, file, stats);
-                    });*/
-                    //if(allowMultipleSelection) {
-                        latestChosen = [latestChosen];
-                    //}
-                    callback(0, latestChosen);
-                    dialog.close();
-                }
-                //console.log(latestChosen);
-                //console.log(event);
-                //console.log(action);
-                //dialog.close();
-                //dialog.close();
-            });
-        });
-        /*console.log(items);
-        var itemListDiv = $(document.createElement("div"));
-        itemListDiv.addClass("container-scrollable");
-        var itemList = $(document.createElement("ul"));
-        itemListDiv.append(itemList);
-        // Loop over returned value
-        Dialogs.showModalDialog(
-            DefaultDialogs.DIALOG_ID_INFO,
-            title,
-            itemListDiv,
-            [
-                {
-                    className: Dialogs.DIALOG_BTN_CLASS_NORMAL,
-                    id: Dialogs.DIALOG_BTN_CANCEL,
-                    text: "Cancel"
-                },
-                {
-                    className: Dialogs.DIALOG_BTN_CLASS_PRIMARY,
-                    id: "open",
-                    text: "Open"
-                }
-            ]
-        );*/
-    }
-    
     function showSaveDialog(title, initialPath, proposedNewFilename, callback) {
-        var type, folderContents, dialog, /*latestChosen, */newpath;
-        var dataString = "directoriesOnly=true";
+        //var type, folderContents, dialog, /*latestChosen, */newpath;
+        //var dataString = "directoriesOnly=true";
         latestChosen = initialPath;
         
         /*$.ajax("http://brackets-on-vm-liongold.c9users.io:8081/api/getItems/" + initialPath, { dataType: "text", crossDomain: true, type: "POST", data: dataString }).done(function(data) {
@@ -749,23 +570,23 @@ define(function (require, exports, module) {
             
             dialog = Dialogs.showModalDialogUsingTemplate(Mustache.render(dialogHTML, dialogInfo), false);*/
             
-            _loadFileSystemDialog(initialPath, proposedNewFilename, true, true, false, Strings.SAVE_FILE_AS, "save", function(dialog) {
-                console.log("line 718");
-                var $saveElement = dialog.getElement();
-                $saveElement.one("buttonClick", function(event, action) {
-                    console.log("line 727");
-                    if(action === Dialogs.DIALOG_BTN_CANCEL) {
-                        console.log("line 729");
-                        dialog.close();
-                    }else{
-                        console.log(latestChosen);
-                        var filename = $("#save_file_name").val();
-                        callback(0, (latestChosen + "/" + filename));
-                        dialog.close();
-                    }
-                });
-            }); //dialog.getElement();
-            console.log("line 712");
+        _loadFileSystemDialog(initialPath, proposedNewFilename, true, true, false, Strings.SAVE_FILE_AS, "save", function(dialog) {
+            console.log("line 718");
+            var $saveElement = dialog.getElement();
+            $saveElement.one("buttonClick", function(event, action) {
+                console.log("line 727");
+                if(action === Dialogs.DIALOG_BTN_CANCEL) {
+                    console.log("line 729");
+                    dialog.close();
+                }else{
+                    console.log(latestChosen);
+                    var filename = $("#save_file_name").val();
+                    callback(0, (latestChosen + "/" + filename));
+                    dialog.close();
+                }
+            });
+        }); //dialog.getElement();
+        console.log("line 712");
             //console.log($saveElement);
             /*$(".contents-list").on("click", "a", function(event) {
                 newpath = $(this).data("folder-path");
@@ -809,185 +630,6 @@ define(function (require, exports, module) {
                 
         //})
     }
-    
-    function showSaveDialog2(title, initialPath, proposedNewFilename, callback) {
-        // FIXME
-        //throw new Error();
-        // Build up list of items 
-        var type;
-        var nameInput = "<p><input type=\"text\" id=\"save_file_name\" value=\"" + proposedNewFilename + "\" placeholder=\"File name\"></p>";
-        //var finalString = "";
-        /*if(allowMultipleSelection) {
-            console.log("Multiple selections have not been implemented yet. ");
-        }*/
-        var dataString = "directoriesOnly=true"/* + chooseDirectories*/;
-        $.ajax("http://brackets-on-vm-liongold.c9users.io:8081/api/getItems/" + initialPath/* + "+" + options*/, { dataType: "text", crossDomain: true, type: "POST", data: dataString }).done(function(data) {
-            var message = "<ul class=\"folder-list-menu-save\">";
-            message += "<li class=\"folder_goto\" data-folder-path=\"" + initialPath + "\" data-folder-type=\"up-level\">Up</li>";
-            result = JSON.parse(data);
-            //console.log(data);
-            for(var i = 0; i < result.length; i++) {
-                //console.log(data[i]);
-                type = "directory"; //result[i].isDirectory;
-                message += "<li class=\"folder_goto\" data-folder-path=\"" + result[i].fullPath + "\" data-folder-type=\"" + type + "\">" + result[i].name + "</li>";
-            }
-            message += "</ul>";
-            var latestChosen = initialPath;
-        //});
-        
-        //OLD CODE:
-        /*var items = [];
-        var dataString = "directoriesOnly=" + chooseDirectories;
-        $.ajax("http://ulkk6b05c55d.liongold.koding.io:7681/api/getItems/" + initialPath/* + "+" + options*//*, { dataType: "text", crossDomain: true, type: "POST", data: dataString }).done(function(data) {
-            alert(data);
-            items = data;
-            callback(FileSystemError.UNKNOWN);
-            console.log(items);
-            var itemListDiv = $(document.createElement("div"));
-            itemListDiv.addClass("container-scrollable");
-            var itemList = $(document.createElement("ul"));
-            itemListDiv.append(itemList);
-            // Loop over returned value
-            for(var i = 0; i < items.length; I++) {
-                var itemLi = $(document.createElement("li"));
-                itemLi.text(items[i]["name"]);
-                itemLi.id(items[i]["fullPath"]);
-            }*/
-            var saveDialog = Dialogs.showModalDialog(
-                DefaultDialogs.DIALOG_ID_INFO,
-                title,
-                (message + nameInput),
-                [
-                    {
-                        className: Dialogs.DIALOG_BTN_CLASS_NORMAL,
-                        id: Dialogs.DIALOG_BTN_CANCEL,
-                        text: "Cancel"
-                    },
-                    {
-                        className: Dialogs.DIALOG_BTN_CLASS_PRIMARY,
-                        id: Dialogs.DIALOG_BTN_SAVE_AS,
-                        text: "Save As"
-                    }
-                ],
-                false
-            );
-            
-            var $saveElement = saveDialog.getElement();
-            
-            //$(".folder_goto").click(function(event) {
-            $(".folder-list-menu-save").on("click", "li", function(event) {
-                //Get info about clicked folder 
-                var newpath = $(this).data("folder-path");
-                latestChosen = newpath;
-                //if(!chooseDirectories) {
-                    if($(this).data("folder-type") === "directory") {
-                        $(this).parent().text("Loading...");
-                        var elem = event.currentTarget;
-                        var dataString = "directoriesOnly=true";
-                        $.ajax(/*"http://ulkk6b05c55d.liongold.koding.io:7681/api/getItems/"*/ "http://brackets-on-vm-liongold.c9users.io:8081/api/getItems/" + newpath/* + "+" + options*/, { dataType: "text", crossDomain: true, type: "POST", data: dataString }).done(function(data) {
-                            result = JSON.parse(data);
-                            //message = "";
-                            if(result.length > 0) {
-                                message = "<ul class=\"folder-list-menu-save\">";
-                                message += "<li class=\"folder_goto\" data-folder-path=\"" + latestChosen + "\" data-folder-type=\"up-level\">Up</li>";
-                                for(var i = 0; i < result.length; i++) {
-                                    var type = "directory"; //result[i].isDirectory;
-                                    message += "<li class=\"folder_goto\" data-folder-path=\"" + result[i].fullPath + "\" data-folder-type=\"" + type + "\">" + result[i].name + "</li>";
-                                }
-                                message += "</ul>";
-                            }else{
-                                message = "<em class=\"folder-list-menu\">Empty folder</em>";
-                            }
-                            /*console.log($(this));
-                            console.log($(this)[0]);
-                            console.log($(this).parent());
-                            console.log($(this).parent().parent());
-                            console.log($(this).parent().parent().parent().parent());
-                            console.log(message);
-                            console.log(listelement);
-                            console.log(listelement[0]);
-                            console.log(listelement[0].parent());
-                            console.log(listelement.parent().html(message));
-                            console.log($(listelement[0]).parent());
-                            listelement.parent().html(message);*/
-                            //console.log($(elem));
-                            //console.log(elem);
-                            $(".folder-list-menu-save").html(message/* + nameInput*/);
-                            
-                        });
-                    }else if($(this).data("folder-type") === "up-level") {
-                        $(this).parent().text("Loading...");
-                        var elem = event.currentTarget;
-                        var dataString = "directoriesOnly=true";
-                        newpath = latestChosen;
-                        $.ajax(/*"http://ulkk6b05c55d.liongold.koding.io:7681/api/getItems/"*/ "http://brackets-on-vm-liongold.c9users.io:8081/api/getItems/" + newpath/* + "+" + options*/, { dataType: "text", crossDomain: true, type: "POST", data: dataString }).done(function(data) {
-                            result = JSON.parse(data);
-                            //message = "";
-                            if(result.length > 0) {
-                                message = "<ul class=\"folder-list-menu-save\">";
-                                message += "<li class=\"folder_goto\" data-folder-path=\"" + latestChosen + "\" data-folder-type=\"up-level\">Up</li>";
-                                for(var i = 0; i < result.length; i++) {
-                                    var type = "directory"; //result[i].isDirectory;
-                                    message += "<li class=\"folder_goto\" data-folder-path=\"" + result[i].fullPath + "\" data-folder-type=\"" + type + "\">" + result[i].name + "</li>";
-                                }
-                                message += "</ul>";
-                            }else{
-                                message = "<em class=\"folder-list-menu\">Empty folder</em>";
-                            }
-                            $(".folder-list-menu-save").html(message/* + nameInput*/);
-                        });
-                    }
-                //}
-            
-            });
-            
-            $saveElement.one("buttonClick", function(event, action) {
-                if(action === Dialogs.DIALOG_BTN_CANCEL) {
-                    saveDialog.close();
-                }else{
-                    console.log(latestChosen);
-                    var filename = $("#save_file_name").val();
-                    /*readFile(latestChosen, {}, function(error, file, stats) {
-                        callback(error, file, stats);
-                    });*/
-                    //if(allowMultipleSelection) {
-                    //    latestChosen = [latestChosen];
-                    //}
-                    callback(0, (latestChosen + "/" + filename));
-                    saveDialog.close();
-                }
-                //console.log(latestChosen);
-                //console.log(event);
-                //console.log(action);
-                //dialog.close();
-                //dialog.close();
-            });
-        });
-        /*console.log(items);
-        var itemListDiv = $(document.createElement("div"));
-        itemListDiv.addClass("container-scrollable");
-        var itemList = $(document.createElement("ul"));
-        itemListDiv.append(itemList);
-        // Loop over returned value
-        Dialogs.showModalDialog(
-            DefaultDialogs.DIALOG_ID_INFO,
-            title,
-            itemListDiv,
-            [
-                {
-                    className: Dialogs.DIALOG_BTN_CLASS_NORMAL,
-                    id: Dialogs.DIALOG_BTN_CANCEL,
-                    text: "Cancel"
-                },
-                {
-                    className: Dialogs.DIALOG_BTN_CLASS_PRIMARY,
-                    id: "open",
-                    text: "Open"
-                }
-            ]
-        );*/
-    }
-
     
     $(document).ready(function() {
         setInterval(function() {
