@@ -1,0 +1,67 @@
+1. Load Brackets and wait until server indicator is green
+- Works. 
+||
+- Works. 
+||
+- Works. 
+
+2. File > New should create new writable file 
+- Works. 
+||
+- Works.
+||
+- Works. 
+
+3. File > Open should open a file 
+- Works. 
+-- Gowever, on the sidebar File.txt is not active (link)
+||
+- Works with issues mentioned above. 
+||
+- Works with issues mentioned above. 
+
+4. File > Open Folder should open folder as project 
+- Works. 
+-- However, all other files have been closed. Check if this is correct behaviour. 
+||
+- Works. 
+-- Yes, that is the correct behaviour. 
+||
+- Works. 
+
+5. File > Close should close file 
+- Works. 
+||
+- Works. 
+||
+- Works. 
+
+6. File > Close All 
+- Works.
+||
+- Works. 
+||
+- Works. 
+
+7. File > Save
+- Not Working. 
+-- This works for a file present on disk but not for new files. 
+||
+- Works, but with the same issues mentioned above. 
+||
+- Works. 
+
+8. File > Save All 
+- Pending. 
+||
+- Pending. 
+||
+- Works. 
+
+9. File > Save As
+- Not Working. 
+-- Found the problem, the ENOENT error number was not correct. 
+||
+- Not Working. 
+||
+- Works. 

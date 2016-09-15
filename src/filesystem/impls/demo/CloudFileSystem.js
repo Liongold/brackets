@@ -34,6 +34,7 @@ define(function (require, exports, module) {
     var Dialogs         = require("widgets/Dialogs");
     var DefaultDialogs  = require("widgets/DefaultDialogs");
     var FileUtils       = require("file/FileUtils");
+    var Strings         = require("strings");
     //var FileWatcher     = require("filesystem/impls/demo/FileWatcherDomain");
         //NodeFileSystem = require("filesystem/impls/demo/NodeFileSystem");
     
@@ -47,6 +48,9 @@ define(function (require, exports, module) {
     var CORE_EXTENSIONS_PREFIX = PathUtils.directory(window.location.href) + "extensions/default/";
 //    var USER_EXTENSIONS_PREFIX = "/.brackets.user.extensions$/";
 //    var CONFIG_PREFIX = "/.$brackets.config$/";
+
+    var dialogHTML = require("text!htmlContent/file-system-dialog.html");
+    var latestChosen = "";
     
     
     // Static, hardcoded file tree structure to serve up. Key is entry name, and value is either:
@@ -80,10 +84,11 @@ define(function (require, exports, module) {
             return null;
         }
         
+        //alert(err);
         switch (err) {
             case /*appshell.fs.ERR_INVALID_PARAMS*/18:
                 return FileSystemError.INVALID_PARAMS;
-            case /*appshell.fs.ERR_NOT_FOUND*/34:
+            case /*appshell.fs.ERR_NOT_FOUND*//*34*/-2:
                 return FileSystemError.NOT_FOUND;
             case /*appshell.fs.ERR_CANT_READ*/3:
                 return FileSystemError.NOT_READABLE;
@@ -164,7 +169,7 @@ define(function (require, exports, module) {
         } else {
             callback(FileSystemError.NOT_FOUND);
         }*/
-        $.ajax("http://ulkk6b05c55d.liongold.koding.io:7681/api/stat/" + path, { dataType: "text"}).done(function(data) {
+        $.ajax("http://brackets-on-vm-liongold.c9users.io:8081/api/stat/" + path, { dataType: "text"}).done(function(data) {
             result = JSON.parse(data);
             if(result.errno) {
                 callback(_mapError(result.errno));
@@ -191,7 +196,7 @@ define(function (require, exports, module) {
                 callback(null, true);
             }
         });*/
-        $.ajax("http://ulkk6b05c55d.liongold.koding.io:7681/api/exists/" + path, { dataType: "text"}).done(function(data) {
+        $.ajax("http://brackets-on-vm-liongold.c9users.io:8081/api/exists/" + path, { dataType: "text"}).done(function(data) {
             result = JSON.parse(data);
             /*if(result.exists) {
                 callback(null, false);
@@ -230,7 +235,7 @@ define(function (require, exports, module) {
             });
             callback(null, names, stats);
         }*/
-        $.ajax("http://ulkk6b05c55d.liongold.koding.io:7681/api/readdir/" + path, { dataType: "text"}).done(function(data) {
+        $.ajax("http://brackets-on-vm-liongold.c9users.io:8081/api/readdir/" + path, { dataType: "text"}).done(function(data) {
             result = JSON.parse(data);
             if(result.errno) {
                 callback(_mapError(result.errno));
@@ -243,7 +248,7 @@ define(function (require, exports, module) {
             }
             var stats = [];
             result./*contents.*/forEach(function(value, index) {
-                $.ajax("http://ulkk6b05c55d.liongold.koding.io:7681/api/stat/" + path + "/" + value, {dataType:"text"}).done(function(data) {
+                $.ajax("http://brackets-on-vm-liongold.c9users.io:8081/api/stat/" + path + "/" + value, {dataType:"text"}).done(function(data) {
                     statsResult = JSON.parse(data);
                     stats[index] =  statsResult.errno || statsResult;
                     count--;
@@ -262,12 +267,12 @@ define(function (require, exports, module) {
             mode = parseInt("0755", 8);
         }
         var dataString = "path=" + path + "&mode=" + mode;
-        $.ajax("http://ulkk6b05c55d.liongold.koding.io:7681/api/mkdir/"/* + path + "+" + mode*/, { dataType: "text", type: "POST", data: dataString}).done(function(data) {
+        $.ajax("http://brackets-on-vm-liongold.c9users.io:8081/api/mkdir/"/* + path + "+" + mode*/, { dataType: "text", type: "POST", data: dataString}).done(function(data) {
             result = JSON.parse(data);
             if(result.errno) {
                 callback(_mapError(result.errno));
             }else{
-                $.ajax("http://ulkk6b05c55d.liongold.koding.io:7681/api/stat/" + path, { dataType: "text"}).done(function(data) {
+                $.ajax("http://brackets-on-vm-liongold.c9users.io:8081/api/stat/" + path, { dataType: "text"}).done(function(data) {
                     statsResult = JSON.parse(data);
                     if(statsResult.errno) {
                         callback(statsResult, []);
@@ -282,7 +287,7 @@ define(function (require, exports, module) {
     function rename(oldPath, newPath, callback) {
         //callback("Cannot modify files on HTTP demo server");
         var dataString = "oldPath=" + oldPath + "&newPath=" + newPath;
-        $.ajax("http://ulkk6b05c55d.liongold.koding.io:7681/api/rename/"/* + oldPath + "+" + newPath*/, { dataType: "text", type: "POST", data: dataString}).done(function(data) {
+        $.ajax("http://brackets-on-vm-liongold.c9users.io:8081/api/rename/"/* + oldPath + "+" + newPath*/, { dataType: "text", type: "POST", data: dataString}).done(function(data) {
             alert(data);
         });
     }
@@ -299,7 +304,7 @@ define(function (require, exports, module) {
                 //appshell.fs.readFile(path, encoding, function (_err, _data) {
                 options = $.param(options);
                 var dataString = "options=" + JSON.stringify(options);
-                $.ajax("http://ulkk6b05c55d.liongold.koding.io:7681/api/readFile/" + path/* + "+" + options*/, { dataType: "text", crossDomain: true, type: "POST", data: dataString }).done(function(data) {
+                $.ajax("http://brackets-on-vm-liongold.c9users.io:8081/api/readFile/" + path/* + "+" + options*/, { dataType: "text", crossDomain: true, type: "POST", data: dataString }).done(function(data) {
                     result = JSON.parse(data);
                     if (result.errno) {
                         callback(_mapError(result.errno));
@@ -361,10 +366,12 @@ define(function (require, exports, module) {
         $.ajax("http://ulkk6b05c55d.liongold.koding.io:7681/api/writeFile/" + path/* + "+" + data + "+" + options*//*, { dataType: "text", type: "POST", data: dataString}).done(function(data) {
             alert(data);
         });*/
+        console.log("writeFile called");
         var encoding = options.encoding || "utf-8";
         function _finishWrite(created) {
+            console.log("finish write");
             var dataString = "data=" + encodeURIComponent(data) + "&encoding=" + encoding;
-            $.ajax("http://ulkk6b05c55d.liongold.koding.io:7681/api/writeFile/" + path, { dataType:"text", type:"POST", data:dataString}).done(function(data) {
+            $.ajax("http://brackets-on-vm-liongold.c9users.io:8081/api/writeFile/" + path, { dataType:"text", type:"POST", data:dataString}).done(function(data) {
                 result = JSON.parse(data);
                 if(result.errno) {
                     callback(_mapError(result.errno));
@@ -377,11 +384,13 @@ define(function (require, exports, module) {
         }
         stat(path, function (err, stats) {
             if (err) {
+                //alert(err);
                 switch (err) {
                 case FileSystemError.NOT_FOUND:
                     _finishWrite(true);
                     break;
                 default:
+                    alert("Error called");
                     callback(err);
                 }
                 return;
@@ -413,7 +422,7 @@ define(function (require, exports, module) {
     
     function unlink(path, callback) {
         //callback("Cannot modify files on HTTP demo server");
-        $.ajax("http://ulkk6b05c55d.liongold.koding.io:7681/api/unlink/" + path, { dataType: "text"}).done(function(data) {
+        $.ajax("http://brackets-on-vm-liongold.c9users.io:8081/api/unlink/" + path, { dataType: "text"}).done(function(data) {
             result = JSON.parse(data);
             callback(_mapError(result.errno));
         });
@@ -431,9 +440,9 @@ define(function (require, exports, module) {
     
     function watchPath(path, callback) {
         //console.warn("File watching is not supported on immutable HTTP demo server");
-        $.ajax("http://ulkk6b05c55d.liongold.koding.io:7681/api/watch/" + path, { dataType: "text" }).done(function(data) {
+        $.ajax("http://brackets-on-vm-liongold.c9users.io:8081/api/watch/" + path, { dataType: "text" }).done(function(data) {
             interval[path] = setInterval(function() {
-                $.ajax("http://ulkk6b05c55d.liongold.koding.io:7681/api/watcherCheck/" + path, { dataType: "text" }).done(function(data) {
+                $.ajax("http://brackets-on-vm-liongold.c9users.io:8081/api/watcherCheck/" + path, { dataType: "text" }).done(function(data) {
                     var result = JSON.parse(data);
                     $("body").trigger({
                         "path": result.path,
@@ -458,7 +467,91 @@ define(function (require, exports, module) {
         }
     }
     
+    function _loadFileSystemDialog(path, proposedNewFilename, directoriesOnly, fullRender, allowMultipleSelection, title, type, callback) {
+        var dataString = "",
+            dialog,
+            newpath = "";
+        
+        if(allowMultipleSelection) {
+            alert("Multiple selections are not supported yet. ");
+        }
+        
+        if(directoriesOnly) {
+            dataString = "directoriesOnly=true";
+        }
+        
+        $.ajax("http://brackets-on-vm-liongold.c9users.io:8081/api/getItems/" + path, { dataType: "text", crossDomain: true, type: "POST", data: dataString }).done(function(data) {
+            var dialogInfo = {
+                folderContents: JSON.parse(data),
+                Strings: Strings,
+                latestChosen: path,
+                proposedNewFilename: proposedNewFilename,
+                title: title,
+                save_dialog: ((type === "save") ? true : false),
+            };
+            
+            if(fullRender) {
+                dialog = Dialogs.showModalDialogUsingTemplate(Mustache.render(dialogHTML, dialogInfo), false);
+                //return dialog.getElement();
+            }else{
+                $(".modal.instance.in:last").html(Mustache.render(dialogHTML, dialogInfo));
+                //return true;
+            }
+            
+            $(".contents-list").on("click", "a", function(event) {
+                newpath = $(this).data("folder-path");
+                
+                if($(this).data("folder-type") === "up-level") {
+                    //Remove part after second last / and set as newpath
+                    newpath = newpath.substring(0, newpath.lastIndexOf("/", (newpath.length - 2)));
+                    console.log(newpath);
+                }
+                
+                latestChosen = newpath;
+                if($(this).data("folder-type") == "directory") {
+                    _loadFileSystemDialog(newpath, proposedNewFilename, true, false, false);
+                }
+            });
+            
+            //return dialog.getElement();
+            
+            if(fullRender) {
+                console.log("line 684");
+                console.log(dialog.getElement());
+                //return dialog.getElement();
+                callback(dialog);
+            }else{
+                return true;
+            }
+            
+            console.log("line 690");
+            //return true;
+        });
+        
+        console.log("line 693");
+    }    
+    
     function showOpenDialog(allowMultipleSelection, chooseDirectories, title, initialPath, fileTypes, callback) {
+
+        
+        console.log(chooseDirectories);
+        _loadFileSystemDialog(initialPath, title, chooseDirectories, true, allowMultipleSelection, title, "open", function(dialog) {
+            var $openElement = dialog.getElement();
+            
+            $openElement.one("buttonClick", function(event, action) {
+                if(action === Dialogs.DIALOG_BTN_CANCEL) {
+                    dialog.close();
+                }else{
+                    console.log(latestChosen);
+                    latestChosen = [latestChosen];
+                    callback(0, latestChosen);
+                    dialog.close();
+                }
+            });
+        });
+    }
+    
+    function showOpenDialog2(allowMultipleSelection, chooseDirectories, title, initialPath, fileTypes, callback) {
         // FIXME
         //throw new Error();
         //filetypes not implemented
@@ -469,13 +562,14 @@ define(function (require, exports, module) {
             console.log("Multiple selections have not been implemented yet. ");
         }
         var dataString = "directoriesOnly=" + chooseDirectories;
-        $.ajax("http://ulkk6b05c55d.liongold.koding.io:7681/api/getItems/" + initialPath/* + "+" + options*/, { dataType: "text", crossDomain: true, type: "POST", data: dataString }).done(function(data) {
+        $.ajax("http://brackets-on-vm-liongold.c9users.io:8081/api/getItems/" + initialPath/* + "+" + options*/, { dataType: "text", crossDomain: true, type: "POST", data: dataString }).done(function(data) {
             var message = "<ul class=\"folder-list-menu\">";
             result = JSON.parse(data);
             //console.log(data);
+            message += "<li class=\"folder_goto\" data-folder-path=\"" + initialPath + "\" data-folder-type=\"up-level\">Up</li>";
             for(var i = 0; i < result.length; i++) {
                 //console.log(data[i]);
-                type = result[i].isDirectory;
+                type = "directory"; //result[i].isDirectory;
                 message += "<li class=\"folder_goto\" data-folder-path=\"" + result[i].fullPath + "\" data-folder-type=\"" + type + "\">" + result[i].name + "</li>";
             }
             message += "</ul>";
@@ -527,16 +621,17 @@ define(function (require, exports, module) {
                 var newpath = $(this).data("folder-path");
                 latestChosen = newpath;
                 //if(!chooseDirectories) {
-                    if($(this).data("folder-type") === true) {
+                    if($(this).data("folder-type") === "directory") {
                         $(this).parent().text("Loading...");
                         var elem = event.currentTarget;
-                        $.ajax("http://ulkk6b05c55d.liongold.koding.io:7681/api/getItems/" + newpath/* + "+" + options*/, { dataType: "text", crossDomain: true, type: "POST", data: dataString }).done(function(data) {
+                        $.ajax("http://brackets-on-vm-liongold.c9users.io:8081/api/getItems/" + newpath/* + "+" + options*/, { dataType: "text", crossDomain: true, type: "POST", data: dataString }).done(function(data) {
                             result = JSON.parse(data);
                             //message = "";
                             if(result.length > 0) {
                                 message = "<ul class=\"folder-list-menu\">";
+                                message += "<li class=\"folder_goto\" data-folder-path=\"" + latestChosen + "\" data-folder-type=\"up-level\">Up</li>";
                                 for(var i = 0; i < result.length; i++) {
-                                    var type = result[i].isDirectory;
+                                    var type = "directory"; //result[i].isDirectory;
                                     message += "<li class=\"folder_goto\" data-folder-path=\"" + result[i].fullPath + "\" data-folder-type=\"" + type + "\">" + result[i].name + "</li>";
                                 }
                                 message += "</ul>";
@@ -563,6 +658,27 @@ define(function (require, exports, module) {
                             //console.log(elem);
                             $(".folder-list-menu").html(message);
                             
+                        });
+                    }else if($(this).data("folder-type") === "up-level"){
+                        $.ajax("http://brackets-on-vm-liongold.c9users.io:8081/api/getItems/" + newpath/* + "+" + options*/, { dataType: "text", crossDomain: true, type: "POST", data: dataString }).done(function(data) {
+                            result = JSON.parse(data);
+                            //message = "";
+                            if(result.length > 0) {
+                                message = "<ul class=\"folder-list-menu\">";
+                                message += "<li class=\"folder_goto\" data-folder-path=\"" + latestChosen + "\" data-folder-type=\"up-level\">Up</li>";
+                                for(var i = 0; i < result.length; i++) {
+                                    var type = result[i].isDirectory;
+                                    message += "<li class=\"folder_goto\" data-folder-path=\"" + result[i].fullPath + "\" data-folder-type=\"" + type + "\">" + result[i].name + "</li>";
+                                }
+                                message += "</ul>";
+                            }else{
+                                if(chooseDirectories) {
+                                    message = "<em class=\"folder-list-menu\">No folders in here</em>";
+                                }else{
+                                    message = "<em class=\"folder-list-menu\">Empty folder</em>";
+                                }
+                            }
+                            $(".folder-list-menu").html(message);
                         });
                     }
                 //}
@@ -615,6 +731,86 @@ define(function (require, exports, module) {
     }
     
     function showSaveDialog(title, initialPath, proposedNewFilename, callback) {
+        var type, folderContents, dialog, /*latestChosen, */newpath;
+        var dataString = "directoriesOnly=true";
+        latestChosen = initialPath;
+        
+        /*$.ajax("http://brackets-on-vm-liongold.c9users.io:8081/api/getItems/" + initialPath, { dataType: "text", crossDomain: true, type: "POST", data: dataString }).done(function(data) {
+            //folderContents = _loadContents(initialPath);
+            var dialogInfo = {
+                folderContents: JSON.parse(data),
+                Strings: Strings,
+                latestChosen: latestChosen,
+                proposedNewFilename: proposedNewFilename,
+                //"folderContents": JSON.padata,
+            };
+            console.log("Folder Contents ");
+            console.log(dialogInfo);
+            
+            dialog = Dialogs.showModalDialogUsingTemplate(Mustache.render(dialogHTML, dialogInfo), false);*/
+            
+            _loadFileSystemDialog(initialPath, proposedNewFilename, true, true, false, Strings.SAVE_FILE_AS, "save", function(dialog) {
+                console.log("line 718");
+                var $saveElement = dialog.getElement();
+                $saveElement.one("buttonClick", function(event, action) {
+                    console.log("line 727");
+                    if(action === Dialogs.DIALOG_BTN_CANCEL) {
+                        console.log("line 729");
+                        dialog.close();
+                    }else{
+                        console.log(latestChosen);
+                        var filename = $("#save_file_name").val();
+                        callback(0, (latestChosen + "/" + filename));
+                        dialog.close();
+                    }
+                });
+            }); //dialog.getElement();
+            console.log("line 712");
+            //console.log($saveElement);
+            /*$(".contents-list").on("click", "a", function(event) {
+                newpath = $(this).data("folder-path");
+                latestChosen = newpath;
+                
+                if($(this).data("folder-type") === "up-level") {
+                    //Remove part after second last / and set as newpath
+                    //newpath = newpath.substring(0, newpath.lastIndexOf("/", (newpath.length - 2)));
+                    //console.log(newpath);
+                }
+                
+                $.ajax("http://brackets-on-vm-liongold.c9users.io:8081/api/getItems/" + newpath, { dataType: "text", crossDomain: true, type: "POST", data: dataString }).done(function(data) {
+    
+                    var dialogInfo = {
+                        folderContents: JSON.parse(data),
+                        Strings: Strings,
+                        latestChosen: latestChosen,
+                        proposedNewFilename: proposedNewFilename
+                    };
+                    //dialog = Dialogs.showModalDialogUsingTemplate(Mustache.render(dialogHTML, dialogInfo), false);
+                    //console.log(Mustache.render(dialogHTML, dialogInfo));
+                    $(".modal.instance.in:last").html(Mustache.render(dialogHTML, dialogInfo));
+                
+                });
+                
+                _loadFileSystemDialog(newpath, proposedNewFilename, true, false);
+                
+            });*/
+        
+            //Process file clock save
+            /*$saveElement.one("buttonClick", function(event, action) {
+                if(action === Dialogs.DIALOG_BTN_CANCEL) {
+                    dialog.close();
+                }else{
+                    console.log(latestChosen);
+                    var filename = $("#save_file_name").val();
+                    callback(0, (latestChosen + "/" + filename));
+                    dialog.close();
+                }
+            });*/
+                
+        //})
+    }
+    
+    function showSaveDialog2(title, initialPath, proposedNewFilename, callback) {
         // FIXME
         //throw new Error();
         // Build up list of items 
@@ -625,13 +821,14 @@ define(function (require, exports, module) {
             console.log("Multiple selections have not been implemented yet. ");
         }*/
         var dataString = "directoriesOnly=true"/* + chooseDirectories*/;
-        $.ajax("http://ulkk6b05c55d.liongold.koding.io:7681/api/getItems/" + initialPath/* + "+" + options*/, { dataType: "text", crossDomain: true, type: "POST", data: dataString }).done(function(data) {
+        $.ajax("http://brackets-on-vm-liongold.c9users.io:8081/api/getItems/" + initialPath/* + "+" + options*/, { dataType: "text", crossDomain: true, type: "POST", data: dataString }).done(function(data) {
             var message = "<ul class=\"folder-list-menu-save\">";
+            message += "<li class=\"folder_goto\" data-folder-path=\"" + initialPath + "\" data-folder-type=\"up-level\">Up</li>";
             result = JSON.parse(data);
             //console.log(data);
             for(var i = 0; i < result.length; i++) {
                 //console.log(data[i]);
-                type = result[i].isDirectory;
+                type = "directory"; //result[i].isDirectory;
                 message += "<li class=\"folder_goto\" data-folder-path=\"" + result[i].fullPath + "\" data-folder-type=\"" + type + "\">" + result[i].name + "</li>";
             }
             message += "</ul>";
@@ -683,17 +880,18 @@ define(function (require, exports, module) {
                 var newpath = $(this).data("folder-path");
                 latestChosen = newpath;
                 //if(!chooseDirectories) {
-                    if($(this).data("folder-type") === true) {
+                    if($(this).data("folder-type") === "directory") {
                         $(this).parent().text("Loading...");
                         var elem = event.currentTarget;
                         var dataString = "directoriesOnly=true";
-                        $.ajax("http://ulkk6b05c55d.liongold.koding.io:7681/api/getItems/" + newpath/* + "+" + options*/, { dataType: "text", crossDomain: true, type: "POST", data: dataString }).done(function(data) {
+                        $.ajax(/*"http://ulkk6b05c55d.liongold.koding.io:7681/api/getItems/"*/ "http://brackets-on-vm-liongold.c9users.io:8081/api/getItems/" + newpath/* + "+" + options*/, { dataType: "text", crossDomain: true, type: "POST", data: dataString }).done(function(data) {
                             result = JSON.parse(data);
                             //message = "";
                             if(result.length > 0) {
                                 message = "<ul class=\"folder-list-menu-save\">";
+                                message += "<li class=\"folder_goto\" data-folder-path=\"" + latestChosen + "\" data-folder-type=\"up-level\">Up</li>";
                                 for(var i = 0; i < result.length; i++) {
-                                    var type = result[i].isDirectory;
+                                    var type = "directory"; //result[i].isDirectory;
                                     message += "<li class=\"folder_goto\" data-folder-path=\"" + result[i].fullPath + "\" data-folder-type=\"" + type + "\">" + result[i].name + "</li>";
                                 }
                                 message += "</ul>";
@@ -717,8 +915,30 @@ define(function (require, exports, module) {
                             $(".folder-list-menu-save").html(message/* + nameInput*/);
                             
                         });
+                    }else if($(this).data("folder-type") === "up-level") {
+                        $(this).parent().text("Loading...");
+                        var elem = event.currentTarget;
+                        var dataString = "directoriesOnly=true";
+                        newpath = latestChosen;
+                        $.ajax(/*"http://ulkk6b05c55d.liongold.koding.io:7681/api/getItems/"*/ "http://brackets-on-vm-liongold.c9users.io:8081/api/getItems/" + newpath/* + "+" + options*/, { dataType: "text", crossDomain: true, type: "POST", data: dataString }).done(function(data) {
+                            result = JSON.parse(data);
+                            //message = "";
+                            if(result.length > 0) {
+                                message = "<ul class=\"folder-list-menu-save\">";
+                                message += "<li class=\"folder_goto\" data-folder-path=\"" + latestChosen + "\" data-folder-type=\"up-level\">Up</li>";
+                                for(var i = 0; i < result.length; i++) {
+                                    var type = "directory"; //result[i].isDirectory;
+                                    message += "<li class=\"folder_goto\" data-folder-path=\"" + result[i].fullPath + "\" data-folder-type=\"" + type + "\">" + result[i].name + "</li>";
+                                }
+                                message += "</ul>";
+                            }else{
+                                message = "<em class=\"folder-list-menu\">Empty folder</em>";
+                            }
+                            $(".folder-list-menu-save").html(message/* + nameInput*/);
+                        });
                     }
                 //}
+            
             });
             
             $saveElement.one("buttonClick", function(event, action) {
@@ -773,7 +993,7 @@ define(function (require, exports, module) {
         setInterval(function() {
             $("#server-connectivity-check").removeClass("connectionInactive");
             $("#server-connectivity-check").removeClass("connectionActive");
-            $.ajax("http://ulkk6b05c55d.liongold.koding.io:7681/api/ping/")
+            $.ajax(/*"http://ulkk6b05c55d.liongold.koding.io:7681/api/ping/"*/ "http://brackets-on-vm-liongold.c9users.io:8081/api/ping/")
                 .success(function() {
                     console.log("connected successfully");
                     $("#server-connectivity-check").addClass("connectionActive");
