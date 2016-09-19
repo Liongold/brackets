@@ -23,7 +23,7 @@
 
 
 /*jslint vars: true, plusplus: true, devel: true, nomen: true, regexp: true, indent: 4, maxerr: 50 */
-/*global define, window */
+/*global define, window, $, Mustache */
 
 define(function (require, exports, module) {
     "use strict";
@@ -420,6 +420,7 @@ define(function (require, exports, module) {
             }
             
             $(".contents-list").on("click", "a", function(event) {
+                $(this).addClass("option-selected");
                 newpath = $(this).data("folder-path");
                 
                 if($(this).data("folder-type") === "up-level") {
@@ -430,6 +431,7 @@ define(function (require, exports, module) {
                 
                 latestChosen = newpath;
                 if($(this).data("folder-type") === "directory") {
+                    $(this).removeClass("option-selected");
                     _loadFileSystemDialog(newpath, proposedNewFilename, true, false, false);
                 }
             });
@@ -481,17 +483,24 @@ define(function (require, exports, module) {
         }); 
     }
     
+    function _checkFSServerAvailability() {
+        $.ajax("http://brackets-on-vm-liongold.c9users.io:8081/api/ping/")
+            .success(function() {
+                return true;
+            })
+            .fail(function() {
+                return false;
+            });
+    }
+    
     $(document).ready(function() {
         window.setInterval(function() {
-            $("#server-connectivity-check").removeClass("connectionInactive");
-            $("#server-connectivity-check").removeClass("connectionActive");
-            $.ajax(/*"http://ulkk6b05c55d.liongold.koding.io:7681/api/ping/"*/ "http://brackets-on-vm-liongold.c9users.io:8081/api/ping/")
-                .success(function() {
-                    $("#server-connectivity-check").addClass("connectionActive");
-                })
-                .fail(function() {
-                    $("#server-connectivity-check").addClass("connectionInactive");
-                });
+            $("#server-connectivity-check").removeClass("connectionInactive connectionActive");
+            if (_checkFSServerAvailability()) {
+                $("#server-connectivity-check").addClass("connectionActive");
+            } else {
+                $("#server-connectivity-check").addClass("connectionInactive");
+            }
         }, 60000);
     });
     
