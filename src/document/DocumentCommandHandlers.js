@@ -360,8 +360,7 @@ define(function (require, exports, module) {
                                 filesToOpen.push(FileSystem.getFileForPath(path));
                             });
                         }
-                        console.log(paneId);
-                        console.log(filesToOpen);
+
                         MainViewManager.addListToWorkingSet(paneId, filesToOpen);
                         
                         _doOpen(paths[paths.length - 1], silent, paneId, options)

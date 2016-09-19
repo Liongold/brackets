@@ -538,13 +538,11 @@ define(function (require, exports, module) {
      *      yet exist on disk.
      */
     FileSystem.prototype._getEntryForPath = function (EntryConstructor, path) {
-        console.log("_getEntryForPath");
         var isDirectory = EntryConstructor === Directory;
         path = this._normalizePath(path, isDirectory);
         var entry = this._index.getEntry(path);
         
         if (!entry) {
-            console.log("entry was not set");
             entry = new EntryConstructor(path, this);
             this._index.addEntry(entry);
         }
@@ -571,7 +569,6 @@ define(function (require, exports, module) {
      * @return {Directory} The Directory object. This directory may not yet exist on disk.
      */
     FileSystem.prototype.getDirectoryForPath = function (path) {
-        console.log(path);
         return this._getEntryForPath(Directory, path);
     };
     

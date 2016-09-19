@@ -106,7 +106,6 @@ define(function (require, exports, module) {
             options.blind = true;
         }
         
-        alert("write called");
         file.write(text, options, function (err) {
             if (!err) {
                 result.resolve();
