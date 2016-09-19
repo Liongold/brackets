@@ -420,7 +420,7 @@ define(function (require, exports, module) {
             }
             
             $(".contents-list").on("click", "a", function(event) {
-                $(this).addClass("option-selected");
+                $(this).addClass("folder-link-selected");
                 newpath = $(this).data("folder-path");
                 
                 if($(this).data("folder-type") === "up-level") {
@@ -431,7 +431,7 @@ define(function (require, exports, module) {
                 
                 latestChosen = newpath;
                 if($(this).data("folder-type") === "directory") {
-                    $(this).removeClass("option-selected");
+                    $(this).removeClass("folder-link-selected");
                     _loadFileSystemDialog(newpath, proposedNewFilename, true, false, false);
                 }
             });
