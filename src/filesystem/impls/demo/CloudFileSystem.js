@@ -84,7 +84,7 @@ define(function (require, exports, module) {
             return null;
         }
         
-        alert(err);
+        //alert(err);
         switch (err) {
         case /*appshell.fs.ERR_INVALID_PARAMS*/18:
             return FileSystemError.INVALID_PARAMS;
@@ -247,6 +247,13 @@ define(function (require, exports, module) {
         });
     }
     
+    function _ignoreableFile(path) {
+        if (path.match(/\extensions\/default\/.*\/package.json/g) || path.match(/\extensions\/default\/.*\/requirejs-config.json/g)) {
+            return true;
+        }
+        return false;
+    }
+    
     function readFile(path, options, callback) {
         //var encoding = options.encoding || "utf-8";
         // callback to be executed when the call to stat completes
@@ -268,17 +275,26 @@ define(function (require, exports, module) {
             }
         }
 
-        if (path === "/$.brackets.config$/brackets.json" || path === "/$.brackets.config$/state.json") {
+        if (_ignoreableFile(path)) {
+            callback(FileSystemError.NOT_FOUND);
+            return;
+        }
+        
+        if (path.match(/\/\$\.brackets\.config\$\/.*\.json/g)) {
+            console.log(path + " is ignored because it depends on a user profile. ");
+            callback(FileSystemError.NOT_FOUND);
+            return;
+        }
+        
+        /*if (path === "/$.brackets.config$/brackets.json" || path === "/$.brackets.config$/state.json") {
             console.log("using Ajaxfilesystem");
             //AjaxFileSystem.readFile(path, callback);
             callback(FileSystemError.UNKNOWN);
         //if (!(_startsWith(path, CORE_EXTENSIONS_PREFIX))) {
             //AjaxFileSystem.readFile(path, callback);
             return;
-        //}
+        //}*/
         
-            
-        }
         if(options.stat) {
             doReadFile(options.stat);
         }else{
@@ -486,9 +502,11 @@ define(function (require, exports, module) {
     function _checkFSServerAvailability() {
         $.ajax("http://brackets-on-vm-liongold.c9users.io:8081/api/ping/")
             .success(function() {
+                console.log("connected successfully");
                 return true;
             })
             .fail(function() {
+                console.log("connection failed");
                 return false;
             });
     }
@@ -496,7 +514,8 @@ define(function (require, exports, module) {
     $(document).ready(function() {
         window.setInterval(function() {
             $("#server-connectivity-check").removeClass("connectionInactive connectionActive");
-            if (_checkFSServerAvailability()) {
+            console.log(_checkFSServerAvailability());
+            if (_checkFSServerAvailability() === true) {
                 $("#server-connectivity-check").addClass("connectionActive");
             } else {
                 $("#server-connectivity-check").addClass("connectionInactive");

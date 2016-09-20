@@ -153,9 +153,7 @@ define(function (require, exports, module) {
      *              been cached yet.
      */
     FileIndex.prototype.getEntry = function (path) {
-        console.log(/$.brackets.config$/);
-        console.log("Dollar " + $);
-        console.log("Dollar dot Brackets  " + $.brackets);
+        console.log(path);
         return this._index[path];
     };
     
