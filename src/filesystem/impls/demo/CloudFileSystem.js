@@ -52,6 +52,8 @@ define(function (require, exports, module) {
     var dialogHTML = require("text!htmlContent/file-system-dialog.html");
     var latestChosen = "";
     
+    var FILESYSTEM_SERVER_URL = "http://brackets-on-vm-liongold.c9users.io:8081/api/";
+    
     
     // Static, hardcoded file tree structure to serve up. Key is entry name, and value is either:
     //  - string = file
@@ -158,7 +160,20 @@ define(function (require, exports, module) {
     
     
     function stat(path, callback) {
-        $.ajax("http://brackets-on-vm-liongold.c9users.io:8081/api/stat/" + path, { dataType: "text"}).done(function(data) {
+        
+        if (_ignoreableFile(path)) {
+            callback(FileSystemError.NOT_FOUND);
+            return;
+        }
+        
+        if (path.match(/\/\$\.brackets\.config\$\/.*\.json/g)) {
+            console.log(path + " is ignored because it depends on user profile. ");
+            callback(FileSystemError.NOT_FOUND);
+            return;
+        }
+        
+
+        $.ajax(FILESYSTEM_SERVER_URL + "stat/" + path, { dataType: "text"}).done(function(data) {
             result = JSON.parse(data);
             if(result.errno) {
                 callback(_mapError(result.errno));
@@ -178,7 +193,7 @@ define(function (require, exports, module) {
     }
     
     function exists(path, callback) {
-        $.ajax("http://brackets-on-vm-liongold.c9users.io:8081/api/exists/" + path, { dataType: "text"}).done(function(data) {
+        $.ajax(FILESYSTEM_SERVER_URL + "exists/" + path, { dataType: "text"}).done(function(data) {
             result = JSON.parse(data);
             if(result.errno === 34) {
                 callback(null, false);
@@ -192,7 +207,7 @@ define(function (require, exports, module) {
     }
     
     function readdir(path, callback) {
-        $.ajax("http://brackets-on-vm-liongold.c9users.io:8081/api/readdir/" + path, { dataType: "text"}).done(function(data) {
+        $.ajax(FILESYSTEM_SERVER_URL + "readdir/" + path, { dataType: "text"}).done(function(data) {
             result = JSON.parse(data);
             if(result.errno) {
                 callback(_mapError(result.errno));
@@ -205,7 +220,7 @@ define(function (require, exports, module) {
             }
             var stats = [];
             result.forEach(function(value, index) {
-                $.ajax("http://brackets-on-vm-liongold.c9users.io:8081/api/stat/" + path + "/" + value, {dataType:"text"}).done(function(data) {
+                $.ajax(FILESYSTEM_SERVER_URL + "stat/" + path + "/" + value, {dataType:"text"}).done(function(data) {
                     statsResult = JSON.parse(data);
                     stats[index] =  statsResult.errno || statsResult;
                     count--;
@@ -223,12 +238,12 @@ define(function (require, exports, module) {
             mode = parseInt("0755", 8);
         }
         var dataString = "path=" + path + "&mode=" + mode;
-        $.ajax("http://brackets-on-vm-liongold.c9users.io:8081/api/mkdir/"/* + path + "+" + mode*/, { dataType: "text", type: "POST", data: dataString}).done(function(data) {
+        $.ajax(FILESYSTEM_SERVER_URL + "mkdir/"/* + path + "+" + mode*/, { dataType: "text", type: "POST", data: dataString}).done(function(data) {
             result = JSON.parse(data);
             if(result.errno) {
                 callback(_mapError(result.errno));
             }else{
-                $.ajax("http://brackets-on-vm-liongold.c9users.io:8081/api/stat/" + path, { dataType: "text"}).done(function(data) {
+                $.ajax(FILESYSTEM_SERVER_URL + "stat/" + path, { dataType: "text"}).done(function(data) {
                     statsResult = JSON.parse(data);
                     if(statsResult.errno) {
                         callback(statsResult, []);
@@ -242,7 +257,7 @@ define(function (require, exports, module) {
     
     function rename(oldPath, newPath, callback) {
         var dataString = "oldPath=" + oldPath + "&newPath=" + newPath;
-        $.ajax("http://brackets-on-vm-liongold.c9users.io:8081/api/rename/"/* + oldPath + "+" + newPath*/, { dataType: "text", type: "POST", data: dataString}).done(function(data) {
+        $.ajax(FILESYSTEM_SERVER_URL + "rename/"/* + oldPath + "+" + newPath*/, { dataType: "text", type: "POST", data: dataString}).done(function(data) {
             alert(data);
         });
     }
@@ -264,7 +279,7 @@ define(function (require, exports, module) {
             } else {
                 options = $.param(options);
                 var dataString = "options=" + JSON.stringify(options);
-                $.ajax("http://brackets-on-vm-liongold.c9users.io:8081/api/readFile/" + path/* + "+" + options*/, { dataType: "text", crossDomain: true, type: "POST", data: dataString }).done(function(data) {
+                $.ajax(FILESYSTEM_SERVER_URL + "readFile/" + path/* + "+" + options*/, { dataType: "text", crossDomain: true, type: "POST", data: dataString }).done(function(data) {
                     result = JSON.parse(data);
                     if (result.errno) {
                         callback(_mapError(result.errno));
@@ -281,19 +296,9 @@ define(function (require, exports, module) {
         }
         
         if (path.match(/\/\$\.brackets\.config\$\/.*\.json/g)) {
-            console.log(path + " is ignored because it depends on a user profile. ");
             callback(FileSystemError.NOT_FOUND);
             return;
         }
-        
-        /*if (path === "/$.brackets.config$/brackets.json" || path === "/$.brackets.config$/state.json") {
-            console.log("using Ajaxfilesystem");
-            //AjaxFileSystem.readFile(path, callback);
-            callback(FileSystemError.UNKNOWN);
-        //if (!(_startsWith(path, CORE_EXTENSIONS_PREFIX))) {
-            //AjaxFileSystem.readFile(path, callback);
-            return;
-        //}*/
         
         if(options.stat) {
             doReadFile(options.stat);
@@ -311,9 +316,21 @@ define(function (require, exports, module) {
     
     function writeFile(path, data, options, callback) {
         var encoding = options.encoding || "utf-8";
+        
+        if (_ignoreableFile(path)) {
+            callback(FileSystemError.NOT_FOUND);
+            return;
+        }
+        
+        if (path.match(/\/\$\.brackets\.config\$\/.*\.json/g)) {
+            console.log(path + " is ignored because it depends on user profile. ");
+            callback(FileSystemError.NOT_FOUND);
+            return;
+        }
+        
         function _finishWrite(created) {
             var dataString = "data=" + encodeURIComponent(data) + "&encoding=" + encoding;
-            $.ajax("http://brackets-on-vm-liongold.c9users.io:8081/api/writeFile/" + path, { dataType:"text", type:"POST", data:dataString}).done(function(data) {
+            $.ajax(FILESYSTEM_SERVER_URL + "writeFile/" + path, { dataType:"text", type:"POST", data:dataString}).done(function(data) {
                 result = JSON.parse(data);
                 if(result.errno) {
                     callback(_mapError(result.errno));
@@ -362,7 +379,7 @@ define(function (require, exports, module) {
     }
     
     function unlink(path, callback) {
-        $.ajax("http://brackets-on-vm-liongold.c9users.io:8081/api/unlink/" + path, { dataType: "text"}).done(function(data) {
+        $.ajax(FILESYSTEM_SERVER_URL + "unlink/" + path, { dataType: "text"}).done(function(data) {
             result = JSON.parse(data);
             callback(_mapError(result.errno));
         });
@@ -379,9 +396,9 @@ define(function (require, exports, module) {
     
     function watchPath(path, callback) {
         //console.warn("File watching is not supported on immutable HTTP demo server");
-        $.ajax("http://brackets-on-vm-liongold.c9users.io:8081/api/watch/" + path, { dataType: "text" }).done(function(data) {
+        $.ajax(FILESYSTEM_SERVER_URL + "watch/" + path, { dataType: "text" }).done(function(data) {
             interval[path] = window.setInterval(function() {
-                $.ajax("http://brackets-on-vm-liongold.c9users.io:8081/api/watcherCheck/" + path, { dataType: "text" }).done(function(data) {
+                $.ajax(FILESYSTEM_SERVER_URL + "watcherCheck/" + path, { dataType: "text" }).done(function(data) {
                     var result = JSON.parse(data);
                     $("body").trigger({
                         "path": result.path,
@@ -419,7 +436,7 @@ define(function (require, exports, module) {
             dataString = "directoriesOnly=true";
         }
         
-        $.ajax("http://brackets-on-vm-liongold.c9users.io:8081/api/getItems/" + path, { dataType: "text", crossDomain: true, type: "POST", data: dataString }).done(function(data) {
+        $.ajax(FILESYSTEM_SERVER_URL + "getItems/" + path, { dataType: "text", crossDomain: true, type: "POST", data: dataString }).done(function(data) {
             var dialogInfo = {
                 folderContents: JSON.parse(data),
                 Strings: Strings,
@@ -499,27 +516,26 @@ define(function (require, exports, module) {
         }); 
     }
     
-    function _checkFSServerAvailability() {
-        $.ajax("http://brackets-on-vm-liongold.c9users.io:8081/api/ping/")
+    function _checkFSServerAvailability(callback) {
+        $.ajax(FILESYSTEM_SERVER_URL + "ping/")
             .success(function() {
-                console.log("connected successfully");
-                return true;
+                callback(true);
             })
             .fail(function() {
-                console.log("connection failed");
-                return false;
+                callback(false);
             });
     }
     
     $(document).ready(function() {
         window.setInterval(function() {
             $("#server-connectivity-check").removeClass("connectionInactive connectionActive");
-            console.log(_checkFSServerAvailability());
-            if (_checkFSServerAvailability() === true) {
-                $("#server-connectivity-check").addClass("connectionActive");
-            } else {
-                $("#server-connectivity-check").addClass("connectionInactive");
-            }
+            _checkFSServerAvailability(function (isConnected) {
+                if(isConnected) {
+                    $("#server-connectivity-check").addClass("connectionActive");
+                } else {
+                    $("#server-connectivity-check").addClass("connectionInactive");
+                }
+            });
         }, 60000);
     });
     
