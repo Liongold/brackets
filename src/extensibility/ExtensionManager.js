@@ -164,7 +164,6 @@ define(function (require, exports, module) {
     function loadTheme(id) {
         var extension = extensions[id];
         if (extension.installInfo && extension.installInfo.metadata && extension.installInfo.metadata.theme) {
-            console.log(extension.installInfo);
             ThemeManager.loadPackage(extension.installInfo);
         }
     }
@@ -243,10 +242,7 @@ define(function (require, exports, module) {
         function setData(id, metadata) {
             var locationType,
                 userExtensionPath = ExtensionLoader.getUserExtensionPath();
-            console.log(metadata);
-            console.log(1);
             if (path.indexOf(userExtensionPath) === 0) {
-                console.log(path);
                 locationType = LOCATION_USER;
             } else {
                 var segments = path.split("/"), parent;
@@ -260,7 +256,6 @@ define(function (require, exports, module) {
                 } else {
                     locationType = LOCATION_UNKNOWN;
                 }
-                console.log(locationType);
             }
             if (!extensions[id]) {
                 extensions[id] = {};
@@ -272,7 +267,6 @@ define(function (require, exports, module) {
                 status: (e.type === "loadFailed" ? START_FAILED : ENABLED)
             };
             synchronizeEntry(id);
-            console.log(id);
             loadTheme(id);
             exports.trigger("statusChange", id);
         }
