@@ -50,7 +50,7 @@ define(function (require, exports, module) {
 //    var CONFIG_PREFIX = "/.$brackets.config$/";
 
     var dialogHTML = require("text!htmlContent/file-system-dialog.html");
-    var latestChosen = "";
+    var latestChosen = [];
     
     var FILESYSTEM_SERVER_URL = "http://brackets-on-vm-liongold.c9users.io:8081/api/";
     
@@ -428,10 +428,6 @@ define(function (require, exports, module) {
             dialog,
             newpath = "";
         
-        if(allowMultipleSelection) {
-            alert("Multiple selections are not supported yet. ");
-        }
-        
         if(directoriesOnly) {
             dataString = "directoriesOnly=true";
         }
@@ -462,7 +458,12 @@ define(function (require, exports, module) {
                     console.log(newpath);
                 }
                 
-                latestChosen = newpath;
+                if(!allowMultipleSelection) {
+                    latestChosen[0] = newpath;
+                } else {
+                    latestChosen.push(newpath);
+                }
+                
                 if($(this).data("folder-type") === "directory") {
                     $(this).removeClass("folder-link-selected");
                     _loadFileSystemDialog(newpath, proposedNewFilename, true, false, false);
@@ -490,7 +491,6 @@ define(function (require, exports, module) {
                 if(action === Dialogs.DIALOG_BTN_CANCEL) {
                     dialog.close();
                 }else{
-                    latestChosen = [latestChosen];
                     callback(0, latestChosen);
                     dialog.close();
                 }
