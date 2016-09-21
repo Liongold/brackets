@@ -500,7 +500,6 @@ define(function (require, exports, module) {
      * @return {Directory}
      */
     function getProjectRoot() {
-        console.log(model);
         if(!model.projectRoot) {
             model.projectRoot = {
                 _path: "/ubuntu/workspace/",
