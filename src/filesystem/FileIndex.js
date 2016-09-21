@@ -153,7 +153,6 @@ define(function (require, exports, module) {
      *              been cached yet.
      */
     FileIndex.prototype.getEntry = function (path) {
-        console.log(path);
         return this._index[path];
     };
     
