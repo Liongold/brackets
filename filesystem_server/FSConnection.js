@@ -9,7 +9,7 @@ var action, command, path, method, parameters, requestPath, formBody = "", event
 var options = {
     'encoding': 'utf-8'
 };
-var installUrl = "/Brackets/dist/";
+var installUrl = "/brackets/dist/";
 
 //Start up HTTP server
 http.createServer(function(request, response) {
@@ -145,7 +145,7 @@ http.createServer(function(request, response) {
                 
             case 'exists':
                 fs.stat(path, function(errors, statistics) {
-                    if(errors && errors.errno == 34) {
+                    if(errors && errors.errno == /*34*/-2) {
                         sendResponse(null, { "exists": false });
                     }else if(errors) {
                         sendResponse(errors);
