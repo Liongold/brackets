@@ -650,7 +650,7 @@ define(function (require, exports, module) {
     function _getWelcomeProjectPath() {
         if (brackets.inBrowser) {
             //return "/Getting Started/";
-            return "/home/ubuntu/workspace";
+            return "/home/ubuntu/workspace/";
         }
         return ProjectModel._getWelcomeProjectPath(Urls.GETTING_STARTED, FileUtils.getNativeBracketsDirectoryPath());
     }
