@@ -464,7 +464,7 @@ define(function (require, exports, module) {
                     latestChosen.push(newpath);
                 }
                 
-                if($(this).data("folder-type") === "directory") {
+                if($(this).data("folder-type") === "directory" || $(this).data("folder-type") === "up-level") {
                     $(this).removeClass("folder-link-selected");
                     _loadFileSystemDialog(newpath, proposedNewFilename, true, false, false);
                 }
