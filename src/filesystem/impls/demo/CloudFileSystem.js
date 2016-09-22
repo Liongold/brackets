@@ -466,7 +466,7 @@ define(function (require, exports, module) {
                 
                 if($(this).data("folder-type") === "directory" || $(this).data("folder-type") === "up-level") {
                     $(this).removeClass("folder-link-selected");
-                    _loadFileSystemDialog(newpath, proposedNewFilename, true, false, false);
+                    _loadFileSystemDialog(newpath, proposedNewFilename, directoriesOnly, false, false, title);
                 }
             });
             
