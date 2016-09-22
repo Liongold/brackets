@@ -3,10 +3,10 @@
         <h1 class="dialog-title">{{title}}</h1>
     </div>
     <div class="modal-body">
-        <div style="background-color:#FFFFFF;border:1px solid #000000;padding: 5px" class="contents-list">
-            <p><a class="folder-link" data-folder-type="up-level" data-folder-path="{{latestChosen}}"><i class="contents-icon">&#9650;</i> Up</a></p>
+        <div class="contents-list">
+            <p class="folder-link-parent"><a class="folder-link" data-folder-type="up-level" data-folder-path="{{latestChosen}}"><i class="contents-icon">&#9650;</i> Up</a></p>
             {{#folderContents}}
-                <p><a class="folder-link" data-folder-type="{{type}}" data-folder-path="{{fullPath}}"><i class="contents-icon">&#9679;</i> {{name}}</a></p>
+                <p class="folder-link-parent"><a class="folder-link" data-folder-type="{{type}}" data-folder-path="{{fullPath}}"><i class="contents-icon">&#9679;</i> {{name}}</a></p>
             {{/folderContents}}
         </div>
         {{#save_dialog}}

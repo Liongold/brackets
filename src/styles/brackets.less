@@ -2177,12 +2177,29 @@ label input {
     max-height: 300px;
 }
 
-/* In Browser Changes */
+/* File System Dialogs (in browser) */
 .contents-list {
-    .folder-link {
-        .contents-icon {
-            width: 5px;
-            height: 5px;
+    background-color: #FFFFFF;
+    border: 1px solid #000000;
+
+    .folder-link-parent {
+        margin: 0;
+        
+        .folder-link {
+            display: inline-block;
+            width: 100%;
+            padding: 5px;
+            cursor: pointer;
+            box-sizing: border-box;
+            
+            &:hover {
+                text-decoration: none;
+            }
+            
+            .contents-icon {
+                width: 5px;
+                height: 5px;
+            }
         }
     }
     .folder-link-selected {
