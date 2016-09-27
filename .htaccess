@@ -2,7 +2,7 @@
 AuthType Basic
 AuthName "Restricted Access"
 AuthUserFile /home/ubuntu/apache-access-permissions
-Require user brackets_user
+Require valid-user
 # END
 # BEGIN GZIP
 <ifmodule mod_deflate.c>
