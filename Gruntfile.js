@@ -336,7 +336,6 @@ module.exports = function (grunt) {
     
     // task: fast-build
     grunt.registerTask('fast-build', [
-        'clean',
         'less',
         'targethtml',
         'useminPrepare',
