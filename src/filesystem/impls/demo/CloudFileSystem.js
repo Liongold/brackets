@@ -172,7 +172,7 @@ define(function (require, exports, module) {
         }
         
 
-        $.ajax(FILESYSTEM_SERVER_URL + "stat/" + path, { dataType: "text"}).done(function(data) {
+        $.ajax(FILESYSTEM_SERVER_URL + "stat/" + path, { /*dataType: "text"*/}).done(function(data) {
             result = JSON.parse(data);
             if(result.errno) {
                 callback(_mapError(result.errno));
@@ -192,7 +192,7 @@ define(function (require, exports, module) {
     }
     
     function exists(path, callback) {
-        $.ajax(FILESYSTEM_SERVER_URL + "exists/" + path, { dataType: "text"}).done(function(data) {
+        $.ajax(FILESYSTEM_SERVER_URL + "exists/" + path, { /*dataType: "text"*/}).done(function(data) {
             result = JSON.parse(data);
             if(result.errno === 34) {
                 callback(null, false);
@@ -206,7 +206,7 @@ define(function (require, exports, module) {
     }
     
     function readdir(path, callback) {
-        $.ajax(FILESYSTEM_SERVER_URL + "readdir/" + path, { dataType: "text"}).done(function(data) {
+        $.ajax(FILESYSTEM_SERVER_URL + "readdir/" + path, { /*dataType: "text"*/}).done(function(data) {
             result = JSON.parse(data);
             if(result.errno) {
                 callback(_mapError(result.errno));
@@ -237,12 +237,12 @@ define(function (require, exports, module) {
             mode = parseInt("0755", 8);
         }
         var dataString = "path=" + path + "&mode=" + mode;
-        $.ajax(FILESYSTEM_SERVER_URL + "mkdir/"/* + path + "+" + mode*/, { dataType: "text", type: "POST", data: dataString}).done(function(data) {
+        $.ajax(FILESYSTEM_SERVER_URL + "mkdir/"/* + path + "+" + mode*/, { /*dataType: "text",*/ type: "POST", data: dataString}).done(function(data) {
             result = JSON.parse(data);
             if(result.errno) {
                 callback(_mapError(result.errno));
             }else{
-                $.ajax(FILESYSTEM_SERVER_URL + "stat/" + path, { dataType: "text"}).done(function(data) {
+                $.ajax(FILESYSTEM_SERVER_URL + "stat/" + path, { /*dataType: "text"*/}).done(function(data) {
                     statsResult = JSON.parse(data);
                     if(statsResult.errno) {
                         callback(statsResult, []);
@@ -256,7 +256,7 @@ define(function (require, exports, module) {
     
     function rename(oldPath, newPath, callback) {
         var dataString = "oldPath=" + oldPath + "&newPath=" + newPath;
-        $.ajax(FILESYSTEM_SERVER_URL + "rename/"/* + oldPath + "+" + newPath*/, { dataType: "text", type: "POST", data: dataString}).done(function(data) {
+        $.ajax(FILESYSTEM_SERVER_URL + "rename/"/* + oldPath + "+" + newPath*/, { /*dataType: "text",*/ type: "POST", data: dataString}).done(function(data) {
             alert(data);
         });
     }
@@ -278,7 +278,7 @@ define(function (require, exports, module) {
             } else {
                 options = $.param(options);
                 var dataString = "options=" + JSON.stringify(options);
-                $.ajax(FILESYSTEM_SERVER_URL + "readFile/" + path/* + "+" + options*/, { dataType: "text", crossDomain: true, type: "POST", data: dataString }).done(function(data) {
+                $.ajax(FILESYSTEM_SERVER_URL + "readFile/" + path/* + "+" + options*/, { /*dataType: "text",*/ crossDomain: true, type: "POST", data: dataString }).done(function(data) {
                     result = JSON.parse(data);
                     if (result.errno) {
                         callback(_mapError(result.errno));
@@ -377,7 +377,7 @@ define(function (require, exports, module) {
     }
     
     function unlink(path, callback) {
-        $.ajax(FILESYSTEM_SERVER_URL + "unlink/" + path, { dataType: "text"}).done(function(data) {
+        $.ajax(FILESYSTEM_SERVER_URL + "unlink/" + path, { /*dataType: "text"*/}).done(function(data) {
             result = JSON.parse(data);
             callback(_mapError(result.errno));
         });
@@ -396,9 +396,9 @@ define(function (require, exports, module) {
     function watchPath(path, callback) {
         //console.warn("File watching is not supported on immutable HTTP demo server");
         alert("watchPath");
-        $.ajax(FILESYSTEM_SERVER_URL + "watch/" + path, { dataType: "text" }).done(function(data) {
+        $.ajax(FILESYSTEM_SERVER_URL + "watch/" + path, { /*dataType: "text"*/ }).done(function(data) {
             interval[path] = window.setInterval(function() {
-                $.ajax(FILESYSTEM_SERVER_URL + "watcherCheck/" + path, { dataType: "text" }).done(function(data) {
+                $.ajax(FILESYSTEM_SERVER_URL + "watcherCheck/" + path, { /*dataType: "text"*/ }).done(function(data) {
                     var result = JSON.parse(data);
                     $("body").trigger({
                         "path": result.path,
@@ -432,7 +432,7 @@ define(function (require, exports, module) {
             dataString = "directoriesOnly=true";
         }
         
-        $.ajax(FILESYSTEM_SERVER_URL + "getItems/" + path, { dataType: "text", crossDomain: true, type: "POST", data: dataString }).done(function(data) {
+        $.ajax(FILESYSTEM_SERVER_URL + "getItems/" + path, { /*dataType: "text",*/ crossDomain: true, type: "POST", data: dataString }).done(function(data) {
             var dialogInfo = {
                 folderContents: JSON.parse(data),
                 Strings: Strings,
