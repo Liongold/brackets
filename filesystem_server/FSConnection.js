@@ -58,8 +58,6 @@ http.createServer(function(request, response) {
         }
         
         if(path.substring(0, installUrl.length) === installUrl) {
-            //path = "/home/liongold/Web" + path;
-            console.log(path);
             path = "/home/ubuntu/workspace" + path;
         }
         

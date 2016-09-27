@@ -277,7 +277,6 @@ define(function (require, exports, module) {
                 setData(metadata.name, metadata);
             })
             .fail(function () {
-                console.log("failed");
                 // If there's no package.json, this is a legacy extension. It was successfully loaded,
                 // but we don't have an official ID or metadata for it, so we just create an id and
                 // "title" for it (which is the last segment of its pathname)

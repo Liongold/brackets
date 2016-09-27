@@ -167,7 +167,6 @@ define(function (require, exports, module) {
         }
         
         if (path.match(/\/\$\.brackets\.config\$\/.*\.json/g)) {
-            console.log(path + " is ignored because it depends on user profile. ");
             callback(FileSystemError.NOT_FOUND);
             return;
         }
@@ -323,7 +322,6 @@ define(function (require, exports, module) {
         }
         
         if (path.match(/\/\$\.brackets\.config\$\/.*\.json/g)) {
-            console.log(path + " is ignored because it depends on user profile. ");
             callback(FileSystemError.NOT_FOUND);
             return;
         }
@@ -390,12 +388,14 @@ define(function (require, exports, module) {
     }
     
     function initWatchers(changeCallback, offlineCallback) {
+        alert("initWatchers");
         // Ignore - since this FS is immutable, we're never going to call these
         interval = [];
     }
     
     function watchPath(path, callback) {
         //console.warn("File watching is not supported on immutable HTTP demo server");
+        alert("watchPath");
         $.ajax(FILESYSTEM_SERVER_URL + "watch/" + path, { dataType: "text" }).done(function(data) {
             interval[path] = window.setInterval(function() {
                 $.ajax(FILESYSTEM_SERVER_URL + "watcherCheck/" + path, { dataType: "text" }).done(function(data) {
