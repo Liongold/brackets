@@ -38,9 +38,6 @@ define(function (require, exports, module) {
     //var FileWatcher     = require("filesystem/impls/demo/FileWatcherDomain");
         //NodeFileSystem = require("filesystem/impls/demo/NodeFileSystem");
     
-    
-    var result;
-    var statsResult;
     var interval = [];
     // Brackets uses FileSystem to read from various internal paths that are not in the user's project storage. We
     // redirect core-extension access to a simple $.ajax() to read from the source code location we're running from,
