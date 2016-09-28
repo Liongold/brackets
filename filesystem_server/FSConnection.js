@@ -5,7 +5,7 @@ var queryString = require('querystring');
 var url = require('url');
 
 //Define Required Variables
-var action, command, path, method, parameters, requestPath, formBody = "", events = [], parsedPostData;
+var command, path, method, parameters, requestPath, formBody = "", events = [], parsedPostData;
 var options = {
     'encoding': 'utf-8'
 };
@@ -238,7 +238,7 @@ http.createServer(function(request, response) {
         requestPath = requestPath.replace("/api/", "");
         path = requestPath.split("?")[0];
         method = request.method;
-        action = getAction(path, method, request.url, formBody);
+        var action = getAction(path, method, request.url, formBody);
         formBody = "";
     });
     
