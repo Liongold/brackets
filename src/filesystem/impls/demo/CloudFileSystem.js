@@ -73,9 +73,10 @@ define(function (require, exports, module) {
         return path[path.length - 1] === "/" ? path.substr(0, path.length - 1) : path;
     }*/
     
-    //Copied from master branch AppshellFileSystem.js
     /**
      * Convert appshell error codes to FileSystemError values.
+     * 
+     * Copied from AppshellFileSystem.js from the master branch
      * 
      * @param {?number} err An appshell error code
      * @return {?string} A FileSystemError string, or null if there was no error code.
@@ -86,21 +87,20 @@ define(function (require, exports, module) {
             return null;
         }
         
-        //alert(err);
         switch (err) {
-        case /*appshell.fs.ERR_INVALID_PARAMS*/18:
+        case 18:
             return FileSystemError.INVALID_PARAMS;
-        case /*appshell.fs.ERR_NOT_FOUND*//*34*/-2:
+        case -2:
             return FileSystemError.NOT_FOUND;
-        case /*appshell.fs.ERR_CANT_READ*/3:
+        case 3:
             return FileSystemError.NOT_READABLE;
-        case /*appshell.fs.ERR_CANT_WRITE*/-13:
+        case -13:
             return FileSystemError.NOT_WRITABLE;
-        case /*appshell.fs.ERR_UNSUPPORTED_ENCODING*/46:
+        case 46:
             return FileSystemError.UNSUPPORTED_ENCODING;
-        case /*appshell.fs.ERR_OUT_OF_SPACE*/54:
+        case 54:
             return FileSystemError.OUT_OF_SPACE;
-        case /*appshell.fs.ERR_FILE_EXISTS*/47:
+        case 47:
             return FileSystemError.ALREADY_EXISTS;
         }
         return FileSystemError.UNKNOWN;
@@ -159,6 +159,19 @@ define(function (require, exports, module) {
     }*/
     
     
+    function _loadFromFileSystemServer (action, path, callback, settings) {
+        
+        if (typeof settings === "undefined") {
+            settings = {};
+        }
+        
+        $.ajax(FILESYSTEM_SERVER_URL + action + "/" + path, settings).done(function(data) {
+            callback(data);
+        });
+        
+    }
+    
+    
     function stat(path, callback) {
         
         if (_ignoreableFile(path)) {
@@ -172,8 +185,7 @@ define(function (require, exports, module) {
         }
         
 
-        $.ajax(FILESYSTEM_SERVER_URL + "stat/" + path, { /*dataType: "text"*/}).done(function(data) {
-            result = JSON.parse(data);
+        _loadFromFileSystemServer("stat", path, function(result) {
             if(result.errno) {
                 callback(_mapError(result.errno));
             }else{
@@ -189,11 +201,11 @@ define(function (require, exports, module) {
                 callback(null, fileStats);
             }
         });
+        
     }
     
     function exists(path, callback) {
-        $.ajax(FILESYSTEM_SERVER_URL + "exists/" + path, { /*dataType: "text"*/}).done(function(data) {
-            result = JSON.parse(data);
+        _loadFromFileSystemServer("exists", path, function(result) {
             if(result.errno === 34) {
                 callback(null, false);
             }else if(result.exists) {
@@ -206,8 +218,7 @@ define(function (require, exports, module) {
     }
     
     function readdir(path, callback) {
-        $.ajax(FILESYSTEM_SERVER_URL + "readdir/" + path, { /*dataType: "text"*/}).done(function(data) {
-            result = JSON.parse(data);
+        _loadFromFileSystemServer("readdir", path, function(result) {
             if(result.errno) {
                 callback(_mapError(result.errno));
                 return;
@@ -219,8 +230,7 @@ define(function (require, exports, module) {
             }
             var stats = [];
             result.forEach(function(value, index) {
-                $.ajax(FILESYSTEM_SERVER_URL + "stat/" + path + "/" + value, {dataType:"text"}).done(function(data) {
-                    statsResult = JSON.parse(data);
+                _loadFromFileSystemServer("stat", path, function(statsResult) {
                     stats[index] =  statsResult.errno || statsResult;
                     count--;
                     if(count <= 0) {
@@ -237,13 +247,11 @@ define(function (require, exports, module) {
             mode = parseInt("0755", 8);
         }
         var dataString = "path=" + path + "&mode=" + mode;
-        $.ajax(FILESYSTEM_SERVER_URL + "mkdir/"/* + path + "+" + mode*/, { /*dataType: "text",*/ type: "POST", data: dataString}).done(function(data) {
-            result = JSON.parse(data);
+        _loadFromFileSystemServer("mkdir", "", function(result) {
             if(result.errno) {
                 callback(_mapError(result.errno));
             }else{
-                $.ajax(FILESYSTEM_SERVER_URL + "stat/" + path, { /*dataType: "text"*/}).done(function(data) {
-                    statsResult = JSON.parse(data);
+                _loadFromFileSystemServer("stat", path, function(statsResult) {
                     if(statsResult.errno) {
                         callback(statsResult, []);
                     }else{
@@ -251,14 +259,14 @@ define(function (require, exports, module) {
                     }
                 });
             }
-        });
+        }, { type: "POST", data: dataString });
     }
     
     function rename(oldPath, newPath, callback) {
         var dataString = "oldPath=" + oldPath + "&newPath=" + newPath;
-        $.ajax(FILESYSTEM_SERVER_URL + "rename/"/* + oldPath + "+" + newPath*/, { /*dataType: "text",*/ type: "POST", data: dataString}).done(function(data) {
+        _loadFromFileSystemServer("rename", "", function(data) {
             alert(data);
-        });
+        }, { type: "POST", data: dataString });
     }
     
     function _ignoreableFile(path) {
@@ -278,14 +286,13 @@ define(function (require, exports, module) {
             } else {
                 options = $.param(options);
                 var dataString = "options=" + JSON.stringify(options);
-                $.ajax(FILESYSTEM_SERVER_URL + "readFile/" + path/* + "+" + options*/, { /*dataType: "text",*/ crossDomain: true, type: "POST", data: dataString }).done(function(data) {
-                    result = JSON.parse(data);
+                _loadFromFileSystemServer("readFile", path, function(result) {
                     if (result.errno) {
                         callback(_mapError(result.errno));
                     } else {
                         callback(null, result.contents, statsResult);
                     }
-                });
+                }, { crossDomain: true, type: "POST", data: dataString });
             }
         }
 
@@ -328,8 +335,7 @@ define(function (require, exports, module) {
         
         function _finishWrite(created) {
             var dataString = "data=" + encodeURIComponent(data) + "&encoding=" + encoding;
-            $.ajax(FILESYSTEM_SERVER_URL + "writeFile/" + path, { dataType:"text", type:"POST", data:dataString}).done(function(data) {
-                result = JSON.parse(data);
+            _loadFromFileSystemServer("writeFile", path, function(result) {
                 if(result.errno) {
                     callback(_mapError(result.errno));
                 }else{
@@ -337,7 +343,7 @@ define(function (require, exports, module) {
                         callback(err, stats, created);
                     });
                 }
-            });
+            }, { dataType:"text", type:"POST", data:dataString });
         }
         stat(path, function (err, stats) {
             if (err) {
@@ -356,7 +362,6 @@ define(function (require, exports, module) {
                 console.error("Blind write attempted: ", path, stats._hash, options.expectedHash);
 
                 if (options.hasOwnProperty("expectedContents")) {
-                    //appshell.fs.readFile(path, encoding, function (_err, _data) {
                     readFile(path, {"encoding": encoding}, function(_err, _data) {
                         if (_err || _data !== options.expectedContents) {
                             callback(FileSystemError.CONTENTS_MODIFIED);
@@ -377,14 +382,13 @@ define(function (require, exports, module) {
     }
     
     function unlink(path, callback) {
-        $.ajax(FILESYSTEM_SERVER_URL + "unlink/" + path, { /*dataType: "text"*/}).done(function(data) {
-            result = JSON.parse(data);
+        _loadFromFileSystemServer("unlink", path, function(result) {
             callback(_mapError(result.errno));
         });
     }
     
     function moveToTrash(path, callback) {
-        callback("This feature has not been implemented yet. ");
+        alert("This feature has not been implemented yet. ");
     }
     
     function initWatchers(changeCallback, offlineCallback) {
@@ -396,10 +400,9 @@ define(function (require, exports, module) {
     function watchPath(path, callback) {
         //console.warn("File watching is not supported on immutable HTTP demo server");
         alert("watchPath");
-        $.ajax(FILESYSTEM_SERVER_URL + "watch/" + path, { /*dataType: "text"*/ }).done(function(data) {
+        _loadFromFileSystemServer("watch", path, function(data) {
             interval[path] = window.setInterval(function() {
-                $.ajax(FILESYSTEM_SERVER_URL + "watcherCheck/" + path, { /*dataType: "text"*/ }).done(function(data) {
-                    var result = JSON.parse(data);
+                _loadFromFileSystemServer("watcherCheck", path, function(result) {
                     $("body").trigger({
                         "path": result.path,
                         "event": result.event,
@@ -432,9 +435,9 @@ define(function (require, exports, module) {
             dataString = "directoriesOnly=true";
         }
         
-        $.ajax(FILESYSTEM_SERVER_URL + "getItems/" + path, { /*dataType: "text",*/ crossDomain: true, type: "POST", data: dataString }).done(function(data) {
+        _loadFromFileSystemServer("getItems", path, function(data) {
             var dialogInfo = {
-                folderContents: JSON.parse(data),
+                folderContents: data,
                 Strings: Strings,
                 latestChosen: path,
                 proposedNewFilename: proposedNewFilename,
@@ -477,7 +480,7 @@ define(function (require, exports, module) {
                 return true;
             }
             
-        });
+        }, { crossDomain: true, type: "POST", data: dataString });
         
     }    
     
@@ -517,6 +520,7 @@ define(function (require, exports, module) {
     }
     
     function _checkFSServerAvailability(callback) {
+        //This uses Promises - can't use the new function for now
         $.ajax(FILESYSTEM_SERVER_URL + "ping/")
             .success(function() {
                 callback(true);
