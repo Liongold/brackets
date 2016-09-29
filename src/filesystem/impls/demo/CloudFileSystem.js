@@ -449,31 +449,35 @@ define(function (require, exports, module) {
             
             if(fullRender) {
                 dialog = Dialogs.showModalDialogUsingTemplate(Mustache.render(dialogHTML, dialogInfo), false);
+                _attachEventHandlers();
             }else{
                 $(".modal.instance.in:last").html(Mustache.render(dialogHTML, dialogInfo));
+                _attachEventHandlers();
             }
             
-            $(".contents-list").on("click", "a", function(event) {
-                $(this).addClass("folder-link-selected");
-                newpath = $(this).data("folder-path");
-                
-                if($(this).data("folder-type") === "up-level") {
-                    //Remove part after second last / and set as newpath
-                    newpath = newpath.substring(0, newpath.lastIndexOf("/", (newpath.length - 2)));
-                    console.log(newpath);
-                }
-                
-                if(!allowMultipleSelection) {
-                    latestChosen[0] = newpath;
-                } else {
-                    latestChosen.push(newpath);
-                }
-                
-                if($(this).data("folder-type") === "directory" || $(this).data("folder-type") === "up-level") {
-                    $(this).removeClass("folder-link-selected");
-                    _loadFileSystemDialog(newpath, proposedNewFilename, directoriesOnly, false, false, title);
-                }
-            });
+            function _attachEventHandlers () {
+                $(".contents-list").on("click", "a", function(event) {
+                    $(this).addClass("folder-link-selected");
+                    newpath = $(this).data("folder-path");
+                    
+                    if($(this).data("folder-type") === "up-level") {
+                        //Remove part after second last / and set as newpath
+                        newpath = newpath.substring(0, newpath.lastIndexOf("/", (newpath.length - 2)));
+                        console.log(newpath);
+                    }
+                    
+                    if(!allowMultipleSelection) {
+                        latestChosen = [newpath];
+                    } else {
+                        latestChosen.push(newpath);
+                    }
+                    
+                    if($(this).data("folder-type") === "directory" || $(this).data("folder-type") === "up-level") {
+                        $(this).removeClass("folder-link-selected");
+                        _loadFileSystemDialog(newpath, proposedNewFilename, directoriesOnly, false, false, title);
+                    }
+                });
+            }
             
 
             if(fullRender) {
