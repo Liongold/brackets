@@ -155,13 +155,23 @@ define(function (require, exports, module) {
     
     function _loadFromFileSystemServer (action, path, callback, settings) {
         
+        if (typeof path == "undefined") {
+            path = "";
+        }
+        
         if (typeof settings === "undefined") {
             settings = {};
         }
         
-        $.ajax(FILESYSTEM_SERVER_URL + action + "/" + path, settings).done(function(data) {
-            callback(data);
-        });
+        var ajaxRequest = $.ajax(FILESYSTEM_SERVER_URL + action + "/" + path, settings);
+        
+        if (typeof callback === "function") {
+            ajaxRequest.done(function(data) {
+                callback(data);
+            });
+        }
+        
+        return ajaxRequest;
         
     }
     
@@ -512,8 +522,7 @@ define(function (require, exports, module) {
     }
     
     function _checkFSServerAvailability(callback) {
-        //This uses Promises - can't use the new function for now
-        $.ajax(FILESYSTEM_SERVER_URL + "ping/")
+        _loadFromFileSystemServer("ping")
             .success(function() {
                 callback(true);
             })
