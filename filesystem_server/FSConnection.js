@@ -15,7 +15,7 @@ var installUrl = "/brackets/dist/";
 http.createServer(function(request, response) {
 
     //Set Required Headers
-    response.setHeader('Access-Control-Allow-Origin', /*'http://ulkk6b05c55d.liongold.koding.io'*/ 'http://brackets-on-vm-liongold.c9users.io');
+    response.setHeader('Access-Control-Allow-Origin', 'http://brackets-on-vm-liongold.c9users.io');
     response.setHeader('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
     response.setHeader('Access-Control-Allow-Headers', 'Content-Type');
     response.setHeader('Content-Type', 'application/json');
@@ -238,9 +238,9 @@ http.createServer(function(request, response) {
         requestPath = requestPath.replace("/api/", "");
         path = requestPath.split("?")[0];
         method = request.method;
-        var action = getAction(path, method, request.url, formBody);
+        getAction(path, method, request.url, formBody);
         formBody = "";
     });
     
 
-}).listen(/*7681*/8081);
+}).listen(8081);
