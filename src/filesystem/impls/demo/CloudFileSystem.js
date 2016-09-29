@@ -28,17 +28,14 @@
 define(function (require, exports, module) {
     "use strict";
     
-    var FileSystemError = require("filesystem/FileSystemError"),
-        FileSystemStats = require("filesystem/FileSystemStats"); //,
-    //var AjaxFileSystem  = require("filesystem/impls/demo/AjaxFileSystem");
-    var Dialogs         = require("widgets/Dialogs");
-    //var DefaultDialogs  = require("widgets/DefaultDialogs");
-    var FileUtils       = require("file/FileUtils");
-    var Strings         = require("strings");
-    //var FileWatcher     = require("filesystem/impls/demo/FileWatcherDomain");
-        //NodeFileSystem = require("filesystem/impls/demo/NodeFileSystem");
-    
+    var Dialogs         = require("widgets/Dialogs"),
+        FileSystemError = require("filesystem/FileSystemError"),
+        FileSystemStats = require("filesystem/FileSystemStats"),
+        FileUtils       = require("file/FileUtils"),
+        Strings         = require("strings");
+
     var interval = [];
+    
     // Brackets uses FileSystem to read from various internal paths that are not in the user's project storage. We
     // redirect core-extension access to a simple $.ajax() to read from the source code location we're running from,
     // and for now we ignore we possibility of user-installable extensions or persistent user preferences.
@@ -274,9 +271,7 @@ define(function (require, exports, module) {
     }
     
     function readFile(path, options, callback) {
-        //var encoding = options.encoding || "utf-8";
-        // callback to be executed when the call to stat completes
-        //  or immediately if a stat object was passed as an argument
+
         function doReadFile(statsResult) {
             if (statsResult.size > (FileUtils.MAX_FILE_SIZE)) {
                 callback(FileSystemError.EXCEEDS_MAX_FILE_SIZE);
@@ -289,7 +284,7 @@ define(function (require, exports, module) {
                     } else {
                         callback(null, result.contents, statsResult);
                     }
-                }, { crossDomain: true, type: "POST", data: dataString });
+                }, { type: "POST", data: dataString });
             }
         }
 
@@ -477,7 +472,7 @@ define(function (require, exports, module) {
                 return true;
             }
             
-        }, { crossDomain: true, type: "POST", data: dataString });
+        }, { type: "POST", data: dataString });
         
     }    
     
